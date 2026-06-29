@@ -1,5 +1,5 @@
 ---
-title: THM Boxes
+title: Useful Commands
 has_children: true
 nav_order: 8
 parent: Pwn Counter
