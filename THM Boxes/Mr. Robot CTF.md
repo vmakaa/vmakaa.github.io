@@ -16,9 +16,9 @@ nav_order: 1
 
 ---
 
-## Challenge Description
+## Box Description
 
-> Placeholder description — replace with the real challenge prompt once you have a real UAF writeup to add here.
+> A Mr. Robot Themed capture the flag.
 
 ## Recon
 
