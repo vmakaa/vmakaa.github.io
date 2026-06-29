@@ -42,8 +42,6 @@ I tried thinking of how to use this wordlist. It was a strange wordlist. It was 
 
 I was stuck as I was not sure how to find a valid user and learned from peeking at the writeup that you can not only use hydra for brute forcing a password, but also for bruteforcing a username, smart.
 
-
-
 So, I used the weird worlist to try and bruteforce a username out of the word press site with the command ```hydra -L weird_wordlist.txt -p test http-post-form "/wp-login.php:log=^USER^&pwd=^PASS^&rememberme=forever&wp-submit=Log+In&redirect_to=http%3A%2F%2F10.64.166.77%2Fwp-admin%2F&testcookie=1:Invalid username." -V -t 64 -f```.
 
 With this command, I found a valid username of Elliot, nice.
@@ -56,19 +54,46 @@ Perusing around the configuration settings I found an area to upload images and 
 
 I thought about encoding a reverse shell in an image, but I remebered not only an easier but faster way.
 
-In one of my previous boxes 
+In one of my previous boxes, I had learned that since wordpress serves up php pages, I can just replace one of the pages with the reverse shell code and tehn navigate to it. I chose the 404 page as I ahd a little trouble with my usual index page, naviagted there, and got a callback on my listener with a shell (￣_,￣ )
 
+As always, I upgraded my connection using the command ```python -c 'import pty; pty.spawn("/bin/bash")' ```. It really just is cosmetic but I find it helps to see at all times what directory im in.
 
+Looking around I found the second flag but couldn't read it, uh oh.
+
+I realized I was still the daemon user but I found a conveniently placed file in teh same directory containing the md5 hash of the password of the user robot.
+
+I first tried to crack the hash using crackstation.com and got the password of ```abcdefghijklmnopqrstuvwxyz```.
+
+I remebered ssh was on the machine, so with the credentials ```robot:abcdefghijklmnopqrstuvwxyz``` I tried to ssh into the machine and I got a successfull ssh connection o(*￣︶￣*)o
+
+I tried to enumerate what sudo prvileges I had using ```sudo -l``` but found I was not able to run sudo at all (╬▔皿▔)╯
+
+Something new that I have been trying to drill into my post-foothold enumeration routine is to look at all the files with suid bits using the command ```find / /perm +6000 2>/dev/null``` (thank you writeup).
+
+I was looking trhough all the suid binaries, cross referencing them with GTFObins to see if they had a section exploiting it with SUID and found that nmap had the SUID bit set which leads me to my exploitation phase.
 
 
 ## Exploitation
 
-Walk through the heap layout, the freed chunk reuse, and how control flow or data was hijacked.
+According to GTFObins, when nmap has teh suid bit set you can run an namp interactive session and then spawn a root shell. So I followed the steps GTFObins listed. I
+
+I ran ```namp --interactive``` which brought me to an nmap shell that looked like this ```nmap>```.
+
+Then I did ```nmap>/bin/sh``` and was greeeted with the lovely ```#``` shell prompt in which I navigated to the root directory adn got the final flag, adding another to my pwn counter.
 
 ## Solution Steps
 
-1. Step one
-2. Step two
-3. Step three
+1. Find valid username via hydra and valid password via hydra using the wordlist found via robots.txt
+2. Login to the wordpress site and replcace 404.php with php reverse shell code with a listener set up
+3. Exploit the nmap binary that ahs the SUID bit set to get a root shell
 
-## Flag
+## Thoughts
+
+This box was rated as a medium difficulty on THM, but I think it should have been rated easy. I am pretty proud that I was able to root the box by only having to refer to the writeup 3 times, which is still a lot but compared to how often I had to when I first started playing CTFs is a gerat improvement which Im happy with. 
+
+I alwasy find it fun and interesting to exploit SUID bit binaries so that was pretty fun, and overall I enjoyed the box.
+
+--
+
+Thank you for reading!
+
