@@ -1,7 +1,8 @@
 ---
-title: Home
-layout: home
-nav_order: 2
+title: Pwn Counter
+has_children: true
+nav_order: 8
+permalink: /pwn-counter/
 ---
 
 # PWN Counter
