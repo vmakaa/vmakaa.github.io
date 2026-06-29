@@ -7,4 +7,4 @@ permalink: /reveng/
 
 ## Reverse Engineering
 
-These are my differetn reverse engineering ventures from crackmes to reverse engineering malware.
+These are my different reverse engineering ventures from crackmes to reverse engineering malware.
