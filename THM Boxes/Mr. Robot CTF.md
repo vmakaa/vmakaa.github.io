@@ -1,8 +1,12 @@
 ---
-title: "Example: Use After Free"
-parent: Mr. Robot
-grand_parent: THM Boxes
-nav_order: 2
+title: Mr. Robot
+parent: THM Boxes
+nav_order: 1
+---
+
+# Mr. Robot — Full Writeup
+
+...your content...
 ---
 
 # Example: Use After Free
