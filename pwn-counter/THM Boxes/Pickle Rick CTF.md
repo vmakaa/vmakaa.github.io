@@ -71,21 +71,23 @@ I went to the home directory, found rick's user profile, and found the second se
 
 I assumed the last ingredient would be in the root directory so I looked for suid bit binaries using the command ```find / -perm -u=s -type f 2>/dev/null```.
 
-After cross referencing a couple binaries with GTFObins, I realized I was overcomplicating things, I was able to run sudo without a password as www-data, which leads me to the exploitation phase (if you can really call it that).
+After cross referencing a couple binaries with GTFObins, I realized I was overcomplicating things, I was able to run sudo without a password as www-data, which leads me to the Privilege Escalation.
 
 
 
-## Exploitation
+## Priv Esc
 
-I ran the command ```sudo su```
+I ran the command ```sudo su```, vavigated to root, and got the final ingredient.
 
 ## Solution Steps
 
-1.
+1. Get login credentials
+2. Establish reverse shell through web command line interface
+3. sudo su
 
 ## Thoughts
 
-
+Pretty fun box, good intro for beginners on CTFs and just fun to solve.
 
 --
 
