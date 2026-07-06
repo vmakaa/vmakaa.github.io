@@ -1,4 +1,3 @@
-
 ---
 title: Bounty Hacker
 parent: THM Boxes
