@@ -26,7 +26,7 @@ NOTE: This is following along to StackSmashing's video series: https://www.youtu
 
 Looking for the ```entry``` function, we see the following decompiled code 
 
-```
+```c++
 /* WARNING: Globals starting with '_' overlap smaller symbols at the same address */
 
 void entry(void)
@@ -111,7 +111,7 @@ We can edit the function signature to get some variable names so the decompiled 
 
 Going into WinMain, we are greeted with the following decompiled code
 
-```
+```c++
 
 int WinMain(HINSTANCE hInstance,HINSTANCE hPrevInstance,PWSTR pCmdLine,int nCmdShow)
 
@@ -164,7 +164,7 @@ The first thing that pops out to me is the string ```pcVar3```. This looks to be
 
 In this section of the code:
 
-```
+```c++
 for (iVar2 = 0xe; iVar2 != 0; iVar2 = iVar2 + -1) {
     *(undefined4 *)pcVar4 = *(undefined4 *)pcVar3;
     pcVar3 = pcVar3 + 4;
@@ -174,7 +174,7 @@ for (iVar2 = 0xe; iVar2 != 0; iVar2 = iVar2 + -1) {
 ```
 We see an example of where ghidra struggles in some of its decompilation efforts. If we rename ```pcVar4``` to ```kill_switchurl_copy``` and ```local_50``` to ```buffer``` it becomes fairly certain that this is some sort of string copy.
 
-```
+```c++
   killswitch_url = s_http://www.iuqerfsodp9ifjaposdfj_004313d0;
   killswitch_url_copy = buffer;
   for (iVar2 = 14; iVar2 != 0; iVar2 = iVar2 + -1) {
