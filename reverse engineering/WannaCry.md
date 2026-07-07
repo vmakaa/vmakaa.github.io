@@ -207,7 +207,7 @@ By looking at the following decompiled code and the associated MS Docs, we can d
 ```
 And if the handle to the url is successfully created, then WannaCry terminates, pretty cool right?
 
-##Failed URL Function (Real WannaCry Code)
+## Failed URL Function (Real WannaCry Code)
 Jumping into this function, we see another WinAPI function that contains a filepath to the specified module (GetModuleFileNameA). This retrieves teh filepath of the executable.
 
 ```c++
@@ -221,7 +221,7 @@ Jumping into this function, we see another WinAPI function that contains a filep
 
 We then see this code here, which checks if we have enough args supplied to the command line and if not it jumps into another function, lets take a look at that function.
 
-###not_enough_args_handler
+### not_enough_args_handler
 
 Jumping into this function, we see it calls and additional two functions. 
 
@@ -236,7 +236,7 @@ Jumping into this function, we see it calls and additional two functions.
 ```
 Let's jump into the first one!
 
-####First function call in not enough args handler
+#### First function call in not enough args handler
 Jumping into this first function call, we see teh following decompiled code:
 
 ```c++
@@ -283,7 +283,7 @@ We then see a simple check that checks to see if the service didn't fail to get 
 
 Lets now jump into the other function call in the not enough args handler function!
 
-####second function call in not enough args handler
+#### second function call in not enough args handler
 
 
 To Be COntinued....
