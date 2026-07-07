@@ -208,7 +208,83 @@ By looking at the following decompiled code and the associated MS Docs, we can d
 And if the handle to the url is successfully created, then WannaCry terminates, pretty cool right?
 
 ##Failed URL Function (Real WannaCry Code)
-Jumping into this function, we see another WinAPI function that contains a filepath to the specified module (GetModuleFileNameA)
+Jumping into this function, we see another WinAPI function that contains a filepath to the specified module (GetModuleFileNameA). This retrieves teh filepath of the executable.
+
+```c++
+  GetModuleFileNameA((HMODULE)0,(LPSTR)&lpFilename,260);
+  argc = (int *)__p___argc();
+  if (*argc < 2) {
+    not_enough_args_handler();
+    return;
+  }
+```
+
+We then see this code here, which checks if we have enough args supplied to the command line and if not it jumps into another function, lets take a look at that function.
+
+###not_enough_args_handler
+
+Jumping into this function, we see it calls and additional two functions. 
+
+```c++
+  undefined4 not_enough_args_handler(void)
+
+{
+  FUN_00569cd0();
+  FUN_00407ce0();
+  return 0;
+}
+```
+Let's jump into the first one!
+
+####First function call in not enough args handler
+Jumping into this first function call, we see teh following decompiled code:
+
+```c++
+
+undefined4 create_service_and_run(void)
+
+{
+  SC_HANDLE hSCManager;
+  SC_HANDLE hService;
+  char exec_w_args_buffer [260];
+  
+                    /* "C:\Users\user\Desktop wannacry.exxe -m security" */
+  sprintf(exec_w_args_buffer,s_%s_-m_security_00431330,&lpFilename);
+  hSCManager = OpenSCManagerA((LPCSTR)0x0,(LPCSTR)0x0,0xf003f);
+  if (hSCManager != (SC_HANDLE)0x0) {
+    hService = CreateServiceA(hSCManager,s_mssecsvc2.0_004312fc,
+                              s_Microsoft_Security_Center_(2.0)_S_00431308,0xf01ff,0x10,2,1,
+                              exec_w_args_buffer,(LPCSTR)0x0,(LPDWORD)0x0,(LPCSTR)0x0,(LPCSTR)0x0,
+                              (LPCSTR)0x0);
+                    /* 
+                       function creates a service named mssecsvc2.0 labeled w the display name as
+                       the param after it. The 'lpBinaryPath' param is the path to the wannacry.exe
+                       with the -security flag
+                       
+                       
+                        */
+    if (hService != (SC_HANDLE)0x0) {
+                    /* Then, if the service doesnt fail, the program starts and then closes the
+                       handle */
+      StartServiceA(hService,0,(LPCSTR *)0x0);
+      CloseServiceHandle(hService);
+    }
+    CloseServiceHandle(hSCManager);
+    return 0;
+  }
+  return 0;
+}
+
+
+```
+I went ahead and added some comments, but essentially, this function stores the path of wannacry with the -security flag in a buffer which is then used in the [CreateServiceA API](https://learn.microsoft.com/en-us/windows/win32/api/winsvc/nf-winsvc-createservicea) to make a fake Microsoft security service.
+
+We then see a simple check that checks to see if the service didn't fail to get created, then to start it and close all handles afterwards.
+
+Lets now jump into the other function call in the not enough args handler function!
+
+####second function call in not enough args handler
+
 
 To Be COntinued....
 
