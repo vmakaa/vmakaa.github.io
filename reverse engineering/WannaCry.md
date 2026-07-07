@@ -22,6 +22,8 @@ NOTE: This is following along to StackSmashing's video series: https://www.youtu
 
 > This is a writeup documenting my reverse engineering learning process using WannaCry
 
+---
+
 ## Let's Begin!
 
 Looking for the ```entry``` function, we see the following decompiled code 
@@ -106,6 +108,8 @@ LAB_004078ad:
 This is the decompiled version of the windows entry function with ```local_6c = FUN_00401fe7(pHVar3,uVar5,pbVar4,uVar2);``` being the call the the WinMain API function (```int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, PWSTR pCmdLine, int nCmdShow);```) that leads to the actual main function of the program.
 
 We can edit the function signature to get some variable names so the decompiled code looks cleaner, but lets get to the main function of the program.
+
+---
 
 ## WannaCry VM Check
 
@@ -209,6 +213,8 @@ By looking at the following decompiled code and the associated MS Docs, we can d
 ```
 And if the handle to the url is successfully created, then WannaCry terminates, pretty cool right?
 
+---
+
 ## Failed URL Function (Real WannaCry Code)
 Jumping into this function, we see another WinAPI function that contains a filepath to the specified module (GetModuleFileNameA). This retrieves teh filepath of the executable.
 
@@ -222,6 +228,8 @@ Jumping into this function, we see another WinAPI function that contains a filep
 ```
 
 We then see this code here, which checks if we have enough args supplied to the command line and if not it jumps into another function, lets take a look at that function.
+
+---
 
 ### not_enough_args_handler
 
@@ -237,6 +245,8 @@ Jumping into this function, we see it calls and additional two functions.
 }
 ```
 Let's jump into the first one!
+
+---
 
 #### First function call in not enough args handler
 Jumping into this first function call, we see teh following decompiled code:
