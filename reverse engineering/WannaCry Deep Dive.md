@@ -1,10 +1,10 @@
 ---
-title: WannaCry
+title: WannaCry Deep Dive
 parent: Reverse Engineering
 nav_order: 1
 ---
 
-# WannaCry
+# WannaCry Deep Dive
 
 <img width="1460" height="960" alt="image" src="https://github.com/user-attachments/assets/c5a64826-eb1c-40c3-b4f7-8035f62f1551" />
 
@@ -480,7 +480,28 @@ Then a new file is written to the new file handle and the handle is closed.
 
 Pretty sneaky...
 
+---
+
 The rest of the code then zeroes out some of the process and start up info structs to prepare them to be written to, concatenates the string ```C:\WINDOWS\taskche.exe /i```, and creates a process with no window on startup and during execution, no hourglass icon, and the concatenated string as the cmdline argument.
+
+---
+
+So let's recap on this function. We saw a tasksche.exe's location being moved so teh malware can write its own file there, that file was created, data from a `resource 1831' was laoded into the file, and then a sneaky process was made in order to run that file. 
+
+Well, what is 'resource 1831'????
+
+Using a program called resource hacker we can see a hex dump with the associated ascii translation to the right, and aha we have a windows executable. (you can tell via the MZ marker and the this program cannot be run in DOS mode marker)
+
+<img width="782" height="429" alt="Screenshot 2026-07-07 180437" src="https://github.com/user-attachments/assets/c8cbf195-2ef8-47b6-b898-4ce9eb2de3f9" />
+
+Let's extract this resource/executable and spin up another ghidra instance to analyze it!
+
+---
+
+##### Analyzing 'Resource 1831'
+
+
+
 
 
 
