@@ -1,7 +1,7 @@
 ---
 title: WannaCry Deep Dive
 parent: Malware Analysis and Reverse Engineering
-grandparent: Reverse Engineering
+grand_parent: Reverse Engineering
 nav_order: 1
 ---
 
