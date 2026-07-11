@@ -7,7 +7,8 @@ nav_order: 18
 
 # Bountry Hacker
 
-<img width="986" height="345" alt="THM-BH_badge" src="https://github.com/user-attachments/assets/00bf0c4b-fbf6-4c10-b495-76ec34dc22fc" />
+<img width="918" height="248" alt="image" src="https://github.com/user-attachments/assets/0830a015-5825-4578-a7a3-b84cea2f4d24" />
+
 
 ## Table of contents
 {: .no_toc .text-delta }
