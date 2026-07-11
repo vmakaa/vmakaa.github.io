@@ -113,7 +113,7 @@ To find the locations of all the flags, I ran ```find / -name "flag*" 2>/dev/nul
 
 I ran ```sudo -l``` and found that I could run /usr/bin/env with no password as su.
 
-I searched gtfobins and found a matching entry, score.
+I searched gtfobins and found a matching [entry](https://gtfobins.org/gtfobins/env/#shell), score.
 
 
 #### priv esc
