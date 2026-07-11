@@ -1,11 +1,11 @@
 ---
-title: Bounty Hacker
+title: Ignite
 parent: THM Boxes
 grand_parent: Pwn Counter
-nav_order: 18
+nav_order: 20
 ---
 
-# Bountry Hacker
+# Ignite
 
 <img width="918" height="248" alt="image" src="https://github.com/user-attachments/assets/0830a015-5825-4578-a7a3-b84cea2f4d24" />
 
