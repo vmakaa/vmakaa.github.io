@@ -1,5 +1,5 @@
 ---
-title: dogcat
+title: Blog
 parent: THM Boxes
 grand_parent: Pwn Counter
 nav_order: 22
@@ -7,7 +7,7 @@ nav_order: 22
 
 # Blog
 
-<img width="918" height="244" alt="image" src="https://github.com/user-attachments/assets/38d26c5e-8a7d-4db5-8759-40b9301c1550" />
+<img width="947" height="238" alt="image" src="https://github.com/user-attachments/assets/09140c63-0132-4c54-8027-2d7c9a4cb834" />
 
 ## Table of contents
 {: .no_toc .text-delta }
