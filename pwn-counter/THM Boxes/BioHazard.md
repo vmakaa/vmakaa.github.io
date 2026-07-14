@@ -7,7 +7,7 @@ nav_order: 25
 
 # BioHazard
 
-<img width="912" height="251" alt="image" src="https://github.com/user-attachments/assets/b129a7f8-802a-45e4-b410-d57f87090a4a" />
+<img width="931" height="270" alt="image" src="https://github.com/user-attachments/assets/4234036e-d284-4d03-99bf-b33372c901be" />
 
 
 ## Table of contents
@@ -129,7 +129,7 @@ The combination should be crest 1 + crest 2 + crest 3 + crest 4. Also, the combi
 ```
 All four crests merged together lead to the encoded base64 string of ```RlRQIHVzZXI6IGh1bnRlciwgRlRQIHBhc3M6IHlvdV9jYW50X2hpZGVfZm9yZXZlcg==``` which decoded is ftp creds, nice. ```FTP user: hunter, FTP pass: you_cant_hide_forever```.
 
-From the ftp server we get teh helmet key and a file called ```important.txt``` which says
+From the ftp server we get the encrypted helmet key, 3 numbered key pictures, and a file called ```important.txt``` which says
 
 ```markdown
 Jill,
@@ -140,6 +140,18 @@ From,
 Barry
 ```
 
+Using stegseek on the first key image we get the first part of the key, then using strings on th second image we get its part, and then binwalk gives us teh final part for the last image. The final key is: ```plant42_can_be_destroy_with_vjolt```.
+
+Using that key we can decrypt the gpg file and get the helmet key.
+
+Going to the ```/hidden_closet``` subdir we input the helmet key and we get the ssh password of ```T_virus_rules``` and the follwoing encrypted text: ```wpbwbxr wpkzg pltwnhro, txrks_xfqsxrd_bvv_fy_rvmexa_ajk```. This is another vigenere cipher which decoded is ```	weasker login password, stars_members_are_my_guinea_pig```.
+
+Going to the studyRoom subdir then gives us an ssh user after some gunzip and tar extracting: ```SSH user: umbrella_guest```.
+
+With this we now have the ssh creds of ```umbrella_guest:T_virus_rules```.
+
+Finding out weasker was the traitor through the story in the terminal, I log in as weasker with teh traitor's password, he can run anythin as sudo, so I read root.txt and the box is finished.
+
 ### priv esc
 
 
@@ -148,18 +160,12 @@ Barry
 
 ## Solution Steps
 
-1. Enumerate the web server
-2. Enumerate the ```/joomla``` subdir
-3. Find the ```sar2html``` tool in the ```/_test``` subdir
-4. Discover the rce exploit for ```sar2html```
-5. exploit it and get creds form log.txt
-6. establish an ssh session with creds
-7. escalate privileges using ```find``` binary by executing the command ```find . -exec /bin/sh -p \; -quit```
+1. read the writeup
 
 
 
 ## Thoughts
-I am really enjoying these medium rated boxes. For my skill level, tehy are not too hard, yet not too easy. As always, I love exploiting SUID binaries simply becauseof how satisfying ti is to see the root shell prompt appear. But overall an interesting box. Exposed me to the ```sar2html``` rce exploit which was super simple yet interesting to learn about.
+This was a fun cryptography box. I dotn feel like I learned anything or sharpened my skills, but it was fun nontheless.
 
 ---
 
