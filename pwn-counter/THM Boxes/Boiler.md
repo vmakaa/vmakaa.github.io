@@ -101,7 +101,7 @@ I searched searchsploit for a script, and there was a python script exploiting t
 
 <img width="508" height="168" alt="image" src="https://github.com/user-attachments/assets/c4ae9d58-c351-4794-bfc0-93d6cd65d294" />
 
-Using thsi script, I viewed what was in the current directory, catted out a log txt, and found a valid set of credentials, nice. ヾ(≧▽≦*)o
+Using this script, I viewed what was in the current directory, catted out a log txt, and found a valid set of credentials, nice. ヾ(≧▽≦*)o
 
 <img width="922" height="340" alt="image" src="https://github.com/user-attachments/assets/f6dc898d-5659-4598-a971-00d4cd854508" />
 
@@ -115,7 +115,7 @@ Looking for suid binaries using ```find / -perm -u=s 2>/dev/null | grep /usr/```
 
 <img width="574" height="288" alt="image" src="https://github.com/user-attachments/assets/360179cf-6760-4b54-839d-56fbda54a1a1" />
 
-Looking on gtfobins for the find command, I see an entry to be able to spawn a root shell using the ```find``` command with the SUID bit set by executing ```find . -exec /bin/sh -p \; -quit```.
+[Looking on gtfobins for the find command](https://gtfobins.org/gtfobins/find/#shell), I see an entry to be able to spawn a root shell using the ```find``` command with the SUID bit set by executing ```find . -exec /bin/sh -p \; -quit```.
 
 Using this command, I now have a root shell and root.txt.
 
