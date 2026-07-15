@@ -198,7 +198,7 @@ I finally tried the key with root and was successfully logged in and got the fla
 
 
 ## Thoughts
-This box was really challenging and im really glad it was becuase I learned a lot. I had no idea about python module hijacking so that was really fun to learn about. I also love popping reverse shells so that was really fun as well. Overall, a fun and challenging box where I got to practice my privilege escalation tactics.
+This box was really challenging and im really glad it was. I had no idea about python module hijacking and it was very interesting to learn about. I also love reverse shells so this was amazing. Overall, a fun and challenging box where I got to practice my privilege escalation tactics.
 
 ---
 
