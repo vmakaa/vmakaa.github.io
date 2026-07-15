@@ -2,7 +2,7 @@
 title: 0day
 parent: THM Boxes
 grand_parent: Pwn Counter
-nav_order: 25
+nav_order: 26
 ---
 
 # 0day
