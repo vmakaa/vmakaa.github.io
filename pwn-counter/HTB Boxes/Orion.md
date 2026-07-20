@@ -7,6 +7,7 @@ nav_order: 19
 
 # Orion
 
+<img width="868" height="541" alt="image" src="https://github.com/user-attachments/assets/7dbbf22b-d022-4004-ba8d-5ff1bb1cfa98" />
 
 
 ## Table of contents
@@ -162,7 +163,9 @@ After getting a shell, I started enumerating a bit and found credentials for the
 
 <img width="822" height="746" alt="image" src="https://github.com/user-attachments/assets/33affc8a-0082-4273-88b4-262aa8602256" />
 
-Using the command ```mysql -u root -pSuperSecureCraft123Pass! -h 127.0.0.1 orion```, I now am inside fo teh database. ヾ(≧▽≦*)o
+Using the command ```mysql -u root -pSuperSecureCraft123Pass! -h 127.0.0.1 orion```, I now am inside of the database. ヾ(≧▽≦*)o
+
+### Inside the DB
 
 After googling soem absic MySQL command syntax, I found the password hash for the adam user on the box. 😎
 
@@ -173,6 +176,18 @@ After Identifying the hash was bcrypt, I used cyberchef to make some more sense 
 <img width="1490" height="72" alt="image" src="https://github.com/user-attachments/assets/dfff8f17-64d2-45f4-b48f-f544d0ea43e7" />
 
 <img width="1398" height="662" alt="image" src="https://github.com/user-attachments/assets/b0fd18b6-2f58-45b2-ae90-ece90e14779a" />
+
+I was able to crack the hash using hashcat and got the creds ```adam:darkangel```
+<img width="600" height="100" alt="image" src="https://github.com/user-attachments/assets/97da62ff-caad-4800-a37b-5fbb6f089c43" />
+
+I tried the new creds via ssh and Succcess! What a score privileged ssh session. (￣_,￣ )
+
+<img width="406" height="51" alt="image" src="https://github.com/user-attachments/assets/f5dba00e-a2e0-400b-b9c4-418a8bd259fb" />
+
+
+
+<img width="960" height="708" alt="image" src="https://github.com/user-attachments/assets/ea012ddf-c309-4ac6-9a2f-e29b05e1cf5c" />
+
 
 
 ## Priv Esc
