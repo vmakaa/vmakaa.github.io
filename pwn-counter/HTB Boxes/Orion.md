@@ -2,7 +2,7 @@
 title: Orion
 parent: HTB Boxes
 grand_parent: Pwn Counter
-nav_order: 19
+nav_order: 27
 ---
 
 # Orion
