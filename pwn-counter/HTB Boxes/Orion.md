@@ -24,7 +24,7 @@ nav_order: 19
 
 ## Disclaimer
 
-I did not solve this box on my own. I had to use [0xdf's amazing writeup](https://0xdf.gitlab.io/2026/07/14/htb-orion.html#shell-as-www-data) and some AI every step of the way, but I am glad I did because I learned soem genuinely useful info when it comes to Web Exploitation and Web Infrastructure.
+I did not solve this box on my own. I had to use [0xdf's amazing writeup](https://0xdf.gitlab.io/2026/07/14/htb-orion.html#shell-as-www-data) and some AI every step of the way, but I am glad I did because I learned some genuinely useful info when it comes to Web Exploitation and Web Infrastructure.
 
 ## Recon
 
@@ -200,7 +200,7 @@ I then decided to look up the telnet version and found that it was vulnerable an
 
 I took a look at [OffSec's Deep Dive](https://www.offsec.com/blog/cve-2026-24061/) on the vulnerability and found that if you did the command ```USER='-f root' telnet -a <ipaddr>```, you would get a root shell.
 
-The reason this happens is that since in this version of telnet, authentication was delegated to ```/usr/bin/login``` and this binary would log the user in with teh username found in the ```USER``` environment variable.
+The reason this happens is that since in this version of telnet, authentication was delegated to ```/usr/bin/login``` and this binary would log the user in with the username found in the ```USER``` environment variable.
 
 So, by setting the ```USER``` environment variable to ```root -f``` it is telling telnet to log the user in as root and ```-f``` tells it to skip authentication entirely. The built out command would be ```/usr/bin/login -h [hostname] “-f root”```.
 
