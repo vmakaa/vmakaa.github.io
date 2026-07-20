@@ -211,9 +211,16 @@ So, by following the instructions from OffSec and entering ```USER='-f root' tel
 
 ## Solution Steps
 
+1. Exploit CraftCMS v5.6.16 admin portal using CVE-2025-32432
+2. Get reverse shell using cmd injection via the vulnerability
+3. Enumerate and locate the ```.env``` file.
+4. Cat it out and find the database credentials
+5. use credentials to ssh as adam into box
+6. exploit telnet v2.7 using CVE-2026-24061 
 
 ## Thoughts
 
+I thought this box was pretty hard. The actual privilege escalation was not too bad, it taught me to amek sure I always look at what services I dont recognize from prior enumeration being served up on localhost. The foothold was the hardest part in my opinion. This attack vector is very niche, but it was interesting to learn about and do. It taught me about the anti-CSRF method and it definitly made me more comfortable with burpsuite. Overall, a really fun and challenging box. Definitly reccomend.
 
 --
 
