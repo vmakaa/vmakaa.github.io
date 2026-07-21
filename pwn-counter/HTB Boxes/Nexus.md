@@ -5,7 +5,7 @@ grand_parent: Pwn Counter
 nav_order: 28
 ---
 
-# Orion
+# Nexus
 
 <img width="845" height="525" alt="image" src="https://github.com/user-attachments/assets/db087a49-1daf-4fa9-88f6-9d71f397b425" />
 
