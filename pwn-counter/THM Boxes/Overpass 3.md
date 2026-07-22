@@ -65,6 +65,43 @@ Navigating to the shell in the webpage, we get a callback on my listener, nice.
 
 <img width="900" height="179" alt="image" src="https://github.com/user-attachments/assets/ed45ce82-470c-4c45-9588-daf18dbbbf0a" />
 
+### SSH Session
+
+After enumerating around the box a bit as the ```apache``` user, I cannot find any low hanging fruit like SUID binaries or exploitable crontabs. 
+
+When trying to go to the home directory to look at the users on the box, I see the paradox user and check for password reuse by doing ```su paradox``` and Success! I now have a privileged user shell.
+
+I checked my sudo permissions but unfortunatly was not able to run sudo at all.
+
+Enumerating in my home directory, I find that I have access to my .ssh folder. 
+
+I created a keypair on my attack box, added my public key to the authorized_keys file, tried to ssh in with the key, and got a valid ssh session, nice.
+
+### Further Enum
+
+Now that I have access to a stable ssh session, I decided to do some more enumeration with linpeas.
+
+After scrolling through the output for a while, I notice this line.
+
+<img width="466" height="117" alt="image" src="https://github.com/user-attachments/assets/40e309e0-7706-4acb-b52a-221c9968172f" />
+
+This does not look like a defualt system service.
+
+I sart googling how to mount the drive to my attackbox and found that my box wasnt able to mount it due to a route not being found.
+
+I accidentally did the command ```showmount -e box_ip``` on the box and saw the ```/home/james``` share, but realized I had meant to do that on my attack machine adn did teh same command, but this time it gave me the error ```RPC: Unable to recieve```.
+
+Huh. It looks like this share is only accessible locally. Lets try and forward the port the share is on to our local machine with ssh.
+
+### Port Forwarding the Share
+
+I do the command ```ssh -i paradox -L 192.168.130.135:7777:10.66.183.175:2049 paradox@10.66.183.175``` and get a valid ssh session.
+
+On my attack machine I do ```ss -tulpn``` to confirm ```port 7777``` is active and it is, success!
+
+<img width="1791" height="128" alt="image" src="https://github.com/user-attachments/assets/bfc858a7-480c-4128-b674-d19351bfdd1d" />
+
+After some googling on how to mount a local nfs share,
 
 ### priv esc
 
