@@ -7,6 +7,7 @@ nav_order: 29
 
 # Overpass 3
 
+<img width="954" height="280" alt="image" src="https://github.com/user-attachments/assets/cf4ef164-ea9d-401b-9685-1bffdede88b4" />
 
 
 ## Table of contents
@@ -101,28 +102,46 @@ On my attack machine I do ```ss -tulpn``` to confirm ```port 7777``` is active a
 
 <img width="1791" height="128" alt="image" src="https://github.com/user-attachments/assets/bfc858a7-480c-4128-b674-d19351bfdd1d" />
 
-After some googling on how to mount a local nfs share,
+After some googling on how to mount a local nfs share, I do the command ```sudo mount -t nfs4 -o port=7777 192.168.130.135:/ /home/user/nfs``` and succesfully mount the share and get the user flag.
+
+<img width="639" height="266" alt="image" src="https://github.com/user-attachments/assets/1e19b056-52a4-4812-abc3-b8ab28911e1c" />
+
+### SSH Session as James
+
+Looking in the hidden directory on the mounted drive, I find the user james' public and private key and am able to ssh with the private key into the box as the james user.
 
 ### priv esc
 
-With this knowledge I did ```export admin="admin"```, ran the checker binary, and my uid was set to root, nice.
+Since ```no_root_squash``` is active on teh drive, any file that I write as root on my attack box to the shared drive, will also appear in teh original drive on the box.
 
-Its strange that I was able to get root.txt before user.txt, but thats because the user.txt was behind a directory that had higher permissions than what ```www-data``` had so I was able to do a find command for user.txt once I had root and find it.
+I escalated to root privileges on my attack box, copied my bash binary and set the suid bit, and tehn copied it to teh share drive to try and execute it as james, but I realized from teh errors that i recieved that my bash binary was too new for the remote box.
 
-<img width="519" height="277" alt="image" src="https://github.com/user-attachments/assets/47c470e2-10f1-44c0-a97b-06e9f95fa891" />
+So, I copied the bash binary from the remote box into the shared drive, then on my box I changed the bash binary's owner and group as root:root and then I set the SUID bit.
+
+On the remote box, I eecuted the bash binary on the shared drive using ```./bash -p``` and i got a root shell and the root flag, nice.
+
+<img width="613" height="277" alt="image" src="https://github.com/user-attachments/assets/7a6d4b67-e022-4995-9fc5-09cfc5482c1b" />
 
 ---
 
 ## Solution Steps
 
-1. CMSeek to find valid usernames
-2. Use hydra with kwheel username and rockyou.txt to find kwheel:cutiepie1
-3. Use metasploit with the crop image exploit to get a shell
-4. find the suid checker binary and use ltrace to understadn what it does
-5. do export admin="admin" (or anything) and get root
+1. Find the ```/backups``` directory and download ```backups.zip```
+2. Decypt the gpg file with the key from the zip and open the file with libreoffice to find some credentials
+3. Use paradox's credentials to log into FTP
+4. Realize that the FTP share is the web server's directory, so you can create a directoty, upload a reverse shell, and naviagte to it in your browser to activate a reverse shell
+5. Check for password reuse and escalate to paradox's account
+6. Create an ssh key pair and put your public key into paradox's ```authorized_keys``` file and get an ssh session
+7. Using linpeas, find that james' nfs in directory ```/home/james *``` has ```no_root_squash``` enabled
+8. Find out that the share is only accessible locally
+9. Use ssh to port forward the port the share is on to your attack machine
+10. mount the shared drive
+11. copy the bash binary from the box to the shared drive directory
+12. on your attack machine as root, set the bash binary's file owner and group to root and set the SUID bit
+13. Then finally on the box as the james user execute the bash binary with ```./bash -p``` and gte a root shell
 
 ## Thoughts
-This box was very very interesting. Its a good box, I just was really frustrated that I couldn't get the manual scripts to work and had to rely on metasploit (even the searchsploit exploit required metasploit???). I thought the privellege escalation was very creative and it was fun to figure out, though I wish I had remembered about the ```ltrace``` command as I have used it before and I could have referenced the writeup less. Overall, this box was fun and taught me how to analyze a binary that I dont have download access to.
+I really enjoyed the priv esc technique this box featured. Prior, I wasa not familiar with nfs drives and exploiting them. But, now I feel if I see it again I will be prepared, and I always appreciate when a box teaches me a new, useful skill in preparation for the OSCP. I though the initial foothold was pretty creative too, it took me a while to realize that the ftp share directory was teh web directory and it seemed so obvious once I realized. Overall a great and fun box. Definitly reccomend.
 
 ---
 
