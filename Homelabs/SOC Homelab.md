@@ -7,6 +7,14 @@ nav_order: 1
 # Homelab Description
 > This is all the information for the homelab I made and presented on to the LSU security society. This homelab takes a cloud-deployed honeypot and uses Suricata, TheHive (Incident Management), EveBox (Quick alert viewing), and tailscale to connect all Virtual Machines together.
 
+# Table of contents
+{: .no_toc .text-delta }
+
+1. TOC
+{:toc}
+
+---
+
 ## Tech Stack
 I decided on a fully cloud-based approach using [DigitalOcean](https://www.digitalocean.com/).
 
