@@ -18,4 +18,4 @@ Use the sidebar (or search above) to browse by category:
 
 ---
 
-*As I learn more, this website will grow in content. A cool tracking of my journey*
+*As I learn more, this website will grow in content.*
