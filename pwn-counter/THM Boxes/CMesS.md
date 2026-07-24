@@ -74,6 +74,8 @@ I logged into the DB and found andre's password hash and set up hashcat in the b
 
 I also found a backup wildcard cronjob ran as root, but i needed access to andre's directory to exploit it so I need to escalate to his account first.
 
+<img width="880" height="150" alt="image" src="https://github.com/user-attachments/assets/4ffcdc31-8683-4177-a476-61a8ab811426" />
+
 Doing further enumeration in different directories, I found a backup apssword file in plaintext in the ```/opt``` directory, and what do you know it works. No hashcat needed...
 
 ## Valid Andre SSH Session/priv esc
