@@ -89,7 +89,7 @@ I then put a reverse shell in the command parameter, set up a listener, and got 
 
 ## Thoughts
 
-This box was geared towards players who are new to API hacking which is perfect because I am new to the concept, so it was fairly easy after the initial API fuzzing. But it was still a fun box, I really enjoyed the reverse engineering part too.
+This was a really fun box. Even though the initial priv esc was really easy, I found breaking out the docker container to be a niche and cool path to learn about and add to my toolbelt. Definitely Recommend. 
 
 ---
 
