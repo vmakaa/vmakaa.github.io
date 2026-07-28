@@ -159,10 +159,10 @@ Initial content discovery via Gobuster and virtual host enumeration returned no 
 A publicly available exploit script was used to confirm and weaponize the vulnerability:
 
 ```
-python3 exploit.py <target_ip>
+python3 exploit.py -t <target_ip> -p <port> -c <cmd>
 ```
 
-The exploit returned an interactive shell on first execution, confirming unauthenticated remote code execution against the web server.
+The exploit returned the output of the specified command and an interactive shell on first execution, confirming unauthenticated remote code execution against the web server.
 
 **Impact**
 
@@ -195,7 +195,7 @@ This finding allows a fully unauthenticated remote attacker to execute arbitrary
 
 **Description**
 
-Following initial access, enumeration with LinPEAS identified that the `python3` binary had been assigned the `cap_setuid` Linux capability. This capability allows a process to change its effective and real user IDs, which — when granted to a general-purpose interpreter such as Python — enables any user able to execute the binary to trivially escalate to root.
+Following initial access, enumeration with LinPEAS identified that the `python3` binary had been assigned the `cap_setuid` Linux capability. This capability allows a process to change its effective and real user IDs, which when granted to a general-purpose interpreter such as Python enables any user able to execute the binary to trivially escalate to root.
 
 **Proof of Concept**
 
@@ -213,7 +213,7 @@ Any user or process capable of invoking the `python3` binary can escalate direct
 
 - Remove unnecessary Linux capabilities from general-purpose interpreters and binaries; `cap_setuid` should never be assigned to `python3` or similar interpreters.
 - Regularly audit binaries for assigned capabilities using `getcap -r /` as part of hardening and configuration review.
-- Apply the principle of least privilege to all container images used in production.
+- Apply the principle of least privilege and assumed breach to all container images used in production.
 
 ---
 
@@ -246,7 +246,7 @@ A static Nmap binary was transferred into the container (no `docker` CLI or stan
 ./nmap -p- 172.17.0.1
 ```
 
-The scan identified an unexpected open port, 5986, on the Docker host itself — a management interface with no legitimate reason to be reachable from inside an application container.
+The scan identified port 5986 as open on the Docker host itself, which was a management interface with no legitimate reason to be reachable from inside an application container.
 
 **Impact**
 
@@ -305,7 +305,7 @@ This finding results in complete unauthenticated remote code execution on the ph
 
 - Patch OMI to a version that enforces authentication on all management requests, or remove OMI entirely if Azure VM management is not required.
 - Restrict access to OMI's listening ports to trusted management networks only, never to application container networks.
-- Combine with Finding 4.3's remediation — proper network segmentation would have prevented this service from being reachable in the first place, providing defense-in-depth even if a future OMI-class vulnerability is discovered.
+- As with Finding 4.3's remediation, proper network segmentation would have prevented this service from being reachable in the first place, providing defense-in-depth even if a future OMI-class vulnerability is discovered.
 
 ---
 
@@ -329,7 +329,7 @@ This finding results in complete unauthenticated remote code execution on the ph
 
 The following remediation actions, in priority order, would have prevented or substantially disrupted this attack chain:
 
-- **Patch Apache HTTP Server** to a version unaffected by CVE-2021-41773 / CVE-2021-42013 — this single control would have prevented the initial foothold entirely.
+- **Patch Apache HTTP Server** to a version unaffected by CVE-2021-41773 / CVE-2021-42013, eliminating the initial foothold.
 - **Remove unnecessary Linux capabilities** from interpreters and general-purpose binaries such as `python3`, eliminating the trivial root escalation path inside the container.
 - **Enforce network segmentation** between application containers and the Docker host, ensuring host-level management services are never reachable from container networks.
 - **Patch or remove the OMI service** on the Docker host, or at minimum restrict it to trusted management-only network segments.
@@ -339,7 +339,7 @@ The following remediation actions, in priority order, would have prevented or su
 
 ## 7. Conclusion
 
-The Oh My WebServer host chain was fully compromised from an unauthenticated, external starting position through to root-level code execution on the underlying Docker host. The root cause was a combination of an unpatched, publicly known web server vulnerability, an unnecessary and dangerous Linux capability assignment, and a container network configuration that failed to isolate the host from a compromised application container. Addressing any single one of these issues — patching Apache, removing the `cap_setuid` capability, or properly segmenting the container network — would have independently broken this attack chain before it reached the underlying host.
+The Oh My WebServer host chain was fully compromised from an unauthenticated, external starting position through to root-level code execution on the underlying Docker host. The root cause was a combination of an unpatched, publicly known web server vulnerability, an unnecessary and dangerous Linux capability assignment, and a container network configuration that failed to isolate the host from a compromised application container. Addressing any single one of these issues would have independently broken this attack chain before it reached the underlying host.
 
 ---
 
