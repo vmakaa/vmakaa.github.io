@@ -83,7 +83,7 @@ I then put a reverse shell in the command parameter, set up a listener, and got 
 ## Solution Steps
 
 1. Use nuceli to find the rce vulnerability on the web server
-2. get a shell and escalate to root using python set uid capabilities
+2. get a shell and escalate to root uid using python set uid capabilities
 3. break out the docker container using OMI on port 5986 exploit to get reverse shell as machine host
 
 
