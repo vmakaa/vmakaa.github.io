@@ -3,6 +3,7 @@ title: Bookstore
 parent: THM Boxes
 grand_parent: Pwn Counter
 nav_order: 32
+has_children: true
 ---
 
 # Bookstore
