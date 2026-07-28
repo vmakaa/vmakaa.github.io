@@ -40,7 +40,7 @@ nav_order: 1
 
 This report documents a black-box penetration test performed against the BookStore host (`10.65.179.176`), a TryHackMe boot-to-root exercise simulating a small web application backed by a Flask/Werkzeug REST API. The objective of the assessment was to identify and exploit vulnerabilities that would allow an unauthenticated attacker to compromise the confidentiality, integrity, and availability of the host.
 
-The assessment identified a critical chain of vulnerabilities beginning with an undocumented legacy API version, escalating through a Local File Inclusion (LFI) flaw, and culminating in unauthenticated Remote Code Execution (RCE) via the exposed Werkzeug interactive debugger. A subsequent local privilege escalation vector — a misconfigured SUID binary — allowed full compromise of the host with root-level access.
+The assessment identified a critical chain of vulnerabilities beginning with an undocumented legacy API version, escalating through a Local File Inclusion (LFI) flaw, and culminating in unauthenticated Remote Code Execution (RCE) via the exposed Werkzeug interactive debugger. Upon foothold onto the system, a misconfigured SUID binary served as a local privilege escalation vector which allowed full compromise of the host with root-level access.
 
 In total, four findings were identified and are summarized below.
 
@@ -49,7 +49,7 @@ In total, four findings were identified and are summarized below.
 | 1 | Undocumented Legacy API Version (v1) Publicly Accessible | 🟢 Low | 5.3 |
 | 2 | Local File Inclusion (LFI) via `show` Parameter | 🟠 High | 7.5 |
 | 3 | Unauthenticated RCE via Exposed Werkzeug Debug Console | 🔴 Critical | 9.8 |
-| 4 | Local Privilege Escalation via Misconfigured SUID Binary | 🔴 Critical | 9.3 |
+| 4 | Local Privilege Escalation via Misconfigured SUID Binary | 🔴 Critical | 8.8 |
 
 Chained together, these findings resulted in full remote compromise of the host, from unauthenticated network access to a root-level interactive shell, with no valid credentials required at any stage.
 
@@ -68,7 +68,7 @@ Chained together, these findings resulted in full remote compromise of the host,
 
 ## 3. Methodology
 
-The assessment followed a standard black-box methodology consistent with OSCP / PTES-style testing phases:
+The assessment followed a standard black-box methodology with the following phases:
 
 - Reconnaissance & Service Enumeration (Nmap, manual browsing)
 - Web & API Content Discovery (`robots.txt`, endpoint review, API versioning)
@@ -111,7 +111,6 @@ An unmaintained API surface increases the attack surface available to an unauthe
 
 - Decommission or disable legacy API versions once superseded.
 - If legacy versions must remain available for compatibility, apply the same security controls and patching cadence as the current version.
-- Remove references to deprecated internal paths from publicly accessible files such as `robots.txt`.
 
 ---
 
@@ -167,23 +166,11 @@ This vulnerability alone allows disclosure of any file readable by the web appli
 
 **Description**
 
-The Flask application was running with debug mode enabled, exposing the Werkzeug interactive debugger. While the debugger console is normally protected by a PIN derived from server-specific values (host user, MAC address, machine ID, and application file path), the LFI vulnerability documented in Finding 4.2 allowed all required values to be leaked directly from the filesystem, enabling full offline PIN reconstruction.
-
-During testing, several of the leaked values (interface MAC address, machine ID, and application path) were successfully obtained, but the manually reconstructed PIN did not authenticate against the console — most likely due to a discrepancy in one of the derivation inputs (e.g. cgroup suffix handling or file path formatting). As an alternate path, the identified application user's shell history file was retrieved via the same LFI primitive and was found to contain the valid debugger PIN, which had apparently been logged during a prior debugging session on the host.
+The Flask application was running with debug mode enabled, exposing the Werkzeug interactive debugger. While the debugger console is normally protected by a PIN derived from server-specific values (host user, MAC address, machine ID, and application file path), the LFI vulnerability documented in Finding 4.2 allowed the unauthenticated attacker to derive the pin from the flask user's bash history.
 
 **Proof of Concept**
 
-Values gathered via LFI to support PIN reconstruction:
-
-| Value | Detail |
-|---|---|
-| Running user | `sid` (identified via `/proc/self/status` → UID/GID cross-referenced in `/etc/passwd`) |
-| Application path | `/usr/lib/python3/dist-packages/flask/app.py` |
-| Network interface | `ens5` (identified via `/proc/net/arp`) |
-| MAC address | `0a:ff:f1:73:c4:eb` |
-| Machine ID | `d86a656616e9492d93f4ab7905f44292` (`/etc/machine-id`) |
-
-Alternate path — PIN recovered directly from the application user's shell history:
+PIN recovered directly from the application user's shell history:
 
 ```
 GET /api/v1/resources/books?show=/home/sid/.bash_history HTTP/1.1
@@ -202,7 +189,7 @@ A reverse shell callback was received as the `sid` user, confirming remote code 
 
 **Impact**
 
-This finding results in complete unauthenticated remote code execution as the application user. Combined with the LFI vulnerability used to obtain the required inputs, it fully compromises the confidentiality, integrity, and availability of the host.
+This finding results in complete unauthenticated remote code execution as the application user. Combined with the LFI vulnerability, it fully compromises the confidentiality, integrity, and availability of the host.
 
 **Remediation**
 
@@ -218,12 +205,12 @@ This finding results in complete unauthenticated remote code execution as the ap
 | | |
 |---|---|
 | **Severity** | Critical |
-| **CVSS 3.1 Vector** | `AV:L/AC:L/PR:L/UI:N/S:C/C:H/I:H/A:H` (9.3) |
-| **Affected Component** | `/path/to/try-harder` (SUID binary) |
+| **CVSS 3.1 Vector** | `AV:N/AC:L/PR:L/UI:N/S:U/C:H/I:H/A:H` (8.8) |
+| **Affected Component** | `/home/sid/try-harder` (SUID binary) |
 
 **Description**
 
-A custom SUID binary named `try-harder` was discovered on the host during post-exploitation enumeration. Reverse engineering the binary in Ghidra revealed that it calls `setuid(0)` unconditionally at the start of execution, then prompts the user for a numeric "magic number." The supplied value is XORed against two hardcoded constants and compared to a fixed result; if the check passes, the binary spawns a root-privileged bash shell via `system("/bin/bash -p")`.
+A custom SUID binary with root file owner permissions named `try-harder` was discovered on the host during post-exploitation enumeration. Reverse engineering the binary in Ghidra revealed that it calls `setuid(0)` unconditionally at the start of execution, then prompts the user for a numeric "magic number." The supplied value is XORed against two hardcoded constants and compared to a fixed result; if the check passes, the binary spawns a root-privileged bash shell via `system("/bin/bash -p")`.
 
 **Proof of Concept**
 
@@ -265,7 +252,7 @@ Any local user able to execute this SUID binary can trivially reverse the check 
 3. Discovered a live, undocumented v1 legacy API by manually modifying the version segment of an intercepted request (Finding 4.1).
 4. Fuzzed API parameters with `ffuf` and discovered a hidden `show` parameter.
 5. Confirmed and exploited a Local File Inclusion vulnerability via the `show` parameter (Finding 4.2).
-6. Identified the exposed Werkzeug debugger and attempted offline PIN reconstruction using values leaked via the LFI primitive.
+6. Identified the exposed Werkzeug debugger at the default ```/console``` location.
 7. Recovered the debugger PIN directly from the application user's `.bash_history` via the same LFI primitive, and used it to unlock the debug console (Finding 4.3).
 8. Executed a reverse shell payload through the debug console to obtain an interactive session as user `sid`.
 9. Enumerated the filesystem post-exploitation and discovered a custom SUID binary, `try-harder`.
@@ -287,7 +274,7 @@ The following remediation actions, in priority order, would have prevented or su
 
 ## 7. Conclusion
 
-The BookStore host was fully compromised from an unauthenticated, external starting position to root-level access. The root cause of the compromise was a chain of individually serious but jointly critical issues: an exposed legacy API surface, an unauthenticated file-read vulnerability, a debug interface left enabled in a reachable environment, and a privilege escalation vector relying on obfuscation rather than genuine access control. Addressing the Werkzeug debug mode and the LFI vulnerability would have independently broken this attack chain at its earliest stages.
+The BookStore host was fully compromised from an unauthenticated, external starting position to root-level access. The root cause of the compromise was a chain of individually serious but jointly critical issues: an exposed legacy API surface, an unauthenticated file-read vulnerability, a debug interface left enabled in a production environment, and a privilege escalation vector relying on obfuscation rather than access control. Addressing the Werkzeug debug mode and the LFI vulnerability would have independently broken this attack chain at its earliest stages.
 
 ---
 
@@ -296,6 +283,5 @@ The BookStore host was fully compromised from an unauthenticated, external start
 - **Nmap** — service and port enumeration
 - **Burp Suite** — request interception and manipulation
 - **ffuf** — parameter and content fuzzing
-- **Custom Python** — Werkzeug debug PIN reconstruction
 - **Netcat** — reverse shell listener
 - **Ghidra** — binary reverse engineering
