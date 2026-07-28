@@ -7,6 +7,7 @@ nav_order: 32
 
 # Bookstore
 
+<img width="955" height="264" alt="image" src="https://github.com/user-attachments/assets/8a7ab36f-0e1e-4135-aa97-08dc0774b683" />
 
 
 ## Table of contents
@@ -96,22 +97,76 @@ I wanted to get a reverse shell so I wouldn't have to do all my work from this c
 
 <img width="531" height="116" alt="image" src="https://github.com/user-attachments/assets/6ada7b42-26ef-4937-a26c-9a91bc1bb7b6" />
 
+### Shell Foothold/Exploring binary
 
+With my shell session, I got the user flag and found a weird file named ```try-harder```. Running ```file``` on it, I discovered that it was a binary.
 
+Executing the binary with ```ltrace``` I found that the binary sets your user id to root and then checks for some kind of Magic Number. 
 
+```ltrace``` wasn't giving me enough info, so I downloaded the binary via an http server i set up on the target box to analyze it with Ghidra.
 
+### Reversing the binary with Ghidra
+
+Upon downlaoding, I threw the binary into ghidra to take a look at the decompiled code as shown below (with some renamed variables):
+
+```c
+void main(void)
+
+{
+  long in_FS_OFFSET;
+  uint local_1c;
+  uint hardcoded_23987;
+  uint magic_num;
+  long local_10;
+  
+  local_10 = *(long *)(in_FS_OFFSET + 0x28);
+  setuid(0);
+  hardcoded_23987 = 0x5db3;
+  puts("What\'s The Magic Number?!");
+  __isoc99_scanf(&DAT_001008ee,&local_1c);
+  magic_num = local_1c ^ 0x1116 ^ hardcoded_23987;
+  if (magic_num == 1573724660) {
+    system("/bin/bash -p");
+  }
+  else {
+    puts("Incorrect Try Harder");
+  }
+  if (local_10 != *(long *)(in_FS_OFFSET + 0x28)) {
+                    /* WARNING: Subroutine does not return */
+    __stack_chk_fail();
+  }
+  return;
+}
+
+```
+
+Now with the decompiled code I can clearly see what the binary is doing.
+
+This binary is setting the user's uid to root, then asking the user for a number, and then xoring that number twice, and then checking if the result is the hardcoded correct result. If it is then spawn a bash shell with root privileges using the binary's suid bit, if not then print try harder.
+
+So to get this magic number, I took the hardcoded result, xored it against the two variables it xored the user input against in order to get the correct user input (or magic number) and got ```1573743953```.
+
+## priv esc
+
+Going back to the shell, I ran the binary, input the number I calculated, and got a root shell.
+
+<img width="566" height="210" alt="image" src="https://github.com/user-attachments/assets/71ab78b4-c1ed-4ab1-9c36-a4fe7c389171" />
 
 ---
 
 ## Solution Steps
 
-1. Use ffuf to find dev subdomain
-
-
+1. Find the live legacy api
+2. fuzz for parameters and find the show parameter
+3. Exploit the show parameter to exploit the LFI vulnerability
+4. Get the Werkzeug console pin from sid's ```.bash_history```
+5. Execute a reverse shell using the console
+6. Reverse engineer the binary to get the correct magic number
+7. input the magic number and get a root shell.
 
 ## Thoughts
 
-I really enjoyed this box becauase it felt good to see my practice payoff and that I was able to privesc to root without needing to refer to a writeup. I struggled a bit though with andre's password, though the lesson learned is never just enumerate with ls always do ls -la. Highly reccomend this box.
+This box was geared towards players who are new to API hacking which is perfect because I am new to the concept, so it was fairly easy after the initial API fuzzing. But it was still a fun box, I really enjoyed the reverse engineering part too.
 
 ---
 
