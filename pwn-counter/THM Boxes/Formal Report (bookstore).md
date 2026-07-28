@@ -9,7 +9,7 @@ nav_order: 1
 
 **Target:** BookStore (TryHackMe Boot-to-Root Assessment)
 
-| | |
+| Information Type | Value |
 |---|---|
 | **Target Host** | 10.65.179.176 |
 | **Assessment Type** | Black-box, unauthenticated web & API penetration test |
@@ -57,7 +57,7 @@ Chained together, these findings resulted in full remote compromise of the host,
 
 ## 2. Scope
 
-| | |
+| Scope Parameter | Value |
 |---|---|
 | **In-Scope Host** | 10.65.179.176 |
 | **In-Scope Ports** | 22 (SSH), 80 (HTTP), 5000 (Flask/Werkzeug API) |
@@ -82,7 +82,7 @@ The assessment followed a standard black-box methodology with the following phas
 
 ### 4.1 Undocumented Legacy API Version (v1) Publicly Accessible
 
-| | |
+| Metric | Value |
 |---|---|
 | **Severity** | Low |
 | **CVSS 3.1 Vector** | `AV:N/AC:L/PR:N/UI:N/S:U/C:L/I:N/A:N` (5.3) |
@@ -116,7 +116,7 @@ An unmaintained API surface increases the attack surface available to an unauthe
 
 ### 4.2 Local File Inclusion (LFI) via `show` Parameter
 
-| | |
+| Metric | Value |
 |---|---|
 | **Severity** | High |
 | **CVSS 3.1 Vector** | `AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:N/A:N` (7.5) |
@@ -158,7 +158,7 @@ This vulnerability alone allows disclosure of any file readable by the web appli
 
 ### 4.3 Unauthenticated RCE via Exposed Werkzeug Debug Console
 
-| | |
+| Metric | Value |
 |---|---|
 | **Severity** | Critical |
 | **CVSS 3.1 Vector** | `AV:N/AC:L/PR:N/UI:N/S:C/C:H/I:H/A:H` (9.8) |
@@ -202,7 +202,7 @@ This finding results in complete unauthenticated remote code execution as the ap
 
 ### 4.4 Local Privilege Escalation via Misconfigured SUID Binary
 
-| | |
+| Metric | Value |
 |---|---|
 | **Severity** | Critical |
 | **CVSS 3.1 Vector** | `AV:N/AC:L/PR:L/UI:N/S:U/C:H/I:H/A:H` (8.8) |
