@@ -20,6 +20,8 @@ has_children: true
 
 Be sure to check out the [Formal Report(https://vmakaa.github.io/pwn-counter/THM%20Boxes/Formal%20Report%20(OMWS).html) once you are done reading!
 
+---
+
 ## Box Description
 
 > Can you root me?
