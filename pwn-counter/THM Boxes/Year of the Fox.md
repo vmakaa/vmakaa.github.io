@@ -25,6 +25,10 @@ Be sure to check out the [Formal Report(https://vmakaa.github.io/pwn-counter/THM
 
 > Don't underestimate the sly old fox...
 
+## Difficulty
+
+> Hard
+
 ## Recon
 
 As always, I started off with an nmap scan which revealed services on ```ports 139, 80, and 445```.
@@ -143,6 +147,52 @@ I was wildly wrong. Turns out we were in an exec command using find. But our quo
 ### Shell Foothold
 
 Now that I have an initial shell, its time to enumerate.
+
+But before enumerating, I wanted to get socat onto the box and establish a socat connection because the connection using the burp payload was not stable.
+
+---
+
+I took a socat static binary, uploaded it to the box, and established a socat TTY connection.
+
+Much better.
+
+---
+
+Enumerating around, I found a hash for pascal, but cracking it showed me that it was the same one as before. I thought it might've been for something more juicy. Oh well.
+
+I took note of a bunch of privesc vectors I found in linpeas. I found a potential writable path abuse and a potential sudo abuse so I noted those down for later.
+
+---
+
+Looking around in the linpeas output, I noticed that ssh was bound to the localhost. I tried using ssh as ```www-data```, but I did not have perms to do so.
+
+I had the idea to port use socat to bind ssh to the box's ipv4 address on port 2222, so I did the command ```./socat TCP-LISTEN:2222,fork,bind=10.65.183.55 TCP:127.0.0.1:22``` and no error messages. Looking good so far...
+
+On my attack box, I tried sshing into the box using its ipv4 address and using port 2222, and success! I got the ssh prompt.
+
+I tested for password reuse for teh rascal user, but no luck.
+
+I tried brute forcing the user ```fox```'s ssh creds with hydra using the command ```hydra -l fox -P /usr/share/wordlists/rockyou.txt ssh://10.65.183.55 -s 2222 -vvv -t 64``` and I got a password!!
+
+<img width="527" height="21" alt="image" src="https://github.com/user-attachments/assets/6c428e09-f166-411e-ac2a-3b2479ee91a1" />
+
+I tried the password and it worked. Hallelujah.
+
+<img width="639" height="319" alt="image" src="https://github.com/user-attachments/assets/7e68d535-eb89-4732-aeb1-d1e9df7ce5c2" />
+
+### SSH Session Foothold
+
+Getting an ssh session, I checked my sudo perms and I was able to run a binary called ```shutdown``` as root. Pulling the binary onto my machine and loading it into ghidra, its safe to say I got tricked by the red herring....
+
+<img width="280" height="141" alt="image" src="https://github.com/user-attachments/assets/95314e9d-e113-49a5-a99d-2dca810d302a" />
+
+---
+
+With that going nowhere, I decided to try one of the linpeas privescs I found. 
+
+I tried the sudo exploit, but it required me to use the make command which wasn't on the box nor was gcc and the box didn't have any internet connection.
+
+So that left me with the writable path exploit left to try.
 
 ---
 
