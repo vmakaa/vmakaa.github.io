@@ -180,6 +180,8 @@ I tried the password and it worked. Hallelujah.
 
 <img width="639" height="319" alt="image" src="https://github.com/user-attachments/assets/7e68d535-eb89-4732-aeb1-d1e9df7ce5c2" />
 
+---
+
 ### SSH Session Foothold
 
 Getting an ssh session, I checked my sudo perms and I was able to run a binary called ```shutdown``` as root. Pulling the binary onto my machine and loading it into ghidra, its safe to say I got tricked by the red herring....
@@ -198,12 +200,15 @@ So that left me with the writable path exploit left to try.
 
 To be cont
 
+---
+
 ## Solution Steps
 
 1. Use nuceli to find the rce vulnerability on the web server
 2. get a shell and escalate to root uid using python set uid capabilities
 3. break out the docker container using OMI on port 5986 exploit to get reverse shell as machine host
 
+---
 
 ## Thoughts
 
