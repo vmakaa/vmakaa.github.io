@@ -245,7 +245,7 @@ An unauthenticated attacker can get a valid password of a valid local user just 
 
 **Description**
 
-After brute forcing the ```rascal``` user's password and logging into the webapp, the underlying php code taht the webapp runs on renders the search input vulnerable to command injection due to a flaw in its input validation.
+After brute forcing the ```rascal``` user's password and logging into the webapp, the underlying php code that the webapp runs on renders the search input vulnerable to command injection due to a flaw in its input validation.
 
 **Proof of Concept**
 
@@ -272,32 +272,33 @@ This vulnerability in input validation allowed command injection to take place e
 
 **Remediation**
 
-- 
+- Avoid using system commands in web app logic when possible.
+- Implement strict argument parsing when writing logic for a webapp.
 - Implement a Web Application Firewall (WAF) to detect and prevent command injection and other web exploitation techniques.
-- Treat the container-to-host network boundary as a genuine trust boundary requiring explicit, minimal allow-rules rather than default bridge connectivity.
+- Implement principles of Least Privilege and Assumed Breach when delegating user privileges for web facing user such as ```www-data```.
 
 ---
 
-### 4.4 Unauthenticated RCE via Exposed OMI Service on Docker Host (CVE-2021-38647 "OMIGOD")
+### 4.4 Port forwarding and IP binding of Local Host SSH Service
 
 <table>
   <tr>
     <td><strong>Severity</strong></td>
-    <td>Critical</td>
+    <td>Low</td>
   </tr>
   <tr>
     <td><strong>CVSS 3.1 Vector</strong></td>
-    <td><code>AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:H/A:H</code> (9.8)</td>
+    <td><code>AV:L/AC:L/PR:L/UI:N/S:U/C:L/I:N/A:N</code> (3.3)</td>
   </tr>
   <tr>
     <td><strong>Affected Component</strong></td>
-    <td>Open Management Infrastructure (OMI) service, TCP/5986, on <code>172.17.0.1</code></td>
+    <td>Local Host SSH Service</td>
   </tr>
 </table>
 
 **Description**
 
-Port 5986 on the Docker host was identified as belonging to Microsoft's Open Management Infrastructure (OMI), commonly bundled with Azure Linux VM management agents. This service is affected by CVE-2021-38647 ("OMIGOD"), a critical unauthenticated remote code execution vulnerability caused by OMI accepting requests without authentication headers under certain configurations.
+With local user access, 
 
 **Proof of Concept**
 
