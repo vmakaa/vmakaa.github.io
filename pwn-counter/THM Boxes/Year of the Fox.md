@@ -19,7 +19,7 @@ has_children: true
 
 ---
 
-Be sure to check out the [Formal Report(https://vmakaa.github.io/pwn-counter/THM%20Boxes/Formal%20Report%20(YOTF).html) once you are done reading!
+Be sure to check out the [Formal Report](https://vmakaa.github.io/pwn-counter/THM%20Boxes/Formal%20Report%20(YOTF).html) once you are done reading!
 
 ---
 
