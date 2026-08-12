@@ -40,10 +40,12 @@ nav_order: 1
 2. [Scope](#2-scope)
 3. [Methodology](#3-methodology)
 4. [Detailed Findings](#4-detailed-findings)
-   - 4.1 [Unauthenticated RCE via Apache HTTP Server Path Traversal (CVE-2021-41773 / CVE-2021-42013)](#41-unauthenticated-rce-via-apache-http-server-path-traversal-cve-2021-41773--cve-2021-42013)
-   - 4.2 [Local Privilege Escalation via Misconfigured Python Binary Capabilities](#42-local-privilege-escalation-via-misconfigured-python-binary-capabilities)
-   - 4.3 [Insufficient Network Segmentation Between Container and Docker Host](#43-insufficient-network-segmentation-between-container-and-docker-host)
-   - 4.4 [Unauthenticated RCE via Exposed OMI Service on Docker Host (CVE-2021-38647 "OMIGOD")](#44-unauthenticated-rce-via-exposed-omi-service-on-docker-host-cve-2021-38647-omigod)
+   - 4.1 [Local User disclosure via misconfigured Samba share](#41-local-user-disclosure-via-misconfigured-samba-share)
+   - 4.2 [Unauthenticated login to password protected web-server via brute forcing](#42-unauthenticated-login-to-password-protected-web-server-via-brute-forcing)
+   - 4.3 [Command Injection via Input Validation Flaw](#43-command-injection-via-input-validation-flaw)
+   - 4.4 [Port forwarding and IP binding of Local Host SSH Service](#44-port-forwarding-and-ip-binding-of-local-host-ssh-service)
+   - 4.5 [Lateral Movement to fox user via ssh brute-forcing](#45-lateral-movement-to-fox-user-via-ssh-brute-forcing)
+   - 4.6 [Privilege Escalation to root via PATH hijacking](#46-privilege-escalation-to-root-via-path-hijacking)
 5. [Attack Narrative / Kill Chain](#5-attack-narrative--kill-chain)
 6. [Summary of Recommendations](#6-summary-of-recommendations)
 7. [Conclusion](#7-conclusion)
@@ -142,7 +144,7 @@ The assessment followed a standard black-box methodology with the following phas
 
 ## 4. Detailed Findings
 
-### 4.1 Locla User disclosure via misconfigured Samba Share
+### 4.1 Local User disclosure via misconfigured Samba Share
 
 <table>
   <tr>
