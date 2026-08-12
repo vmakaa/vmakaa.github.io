@@ -8,6 +8,8 @@ has_children: true
 
 # Year of the Fox
 
+<img width="952" height="278" alt="image" src="https://github.com/user-attachments/assets/d8c00471-8231-4802-8455-2dd13c666f38" />
+
 
 ## Table of contents
 {: .no_toc .text-delta }
@@ -170,7 +172,7 @@ I had the idea to port use socat to bind ssh to the box's ipv4 address on port 2
 
 On my attack box, I tried sshing into the box using its ipv4 address and using port 2222, and success! I got the ssh prompt.
 
-I tested for password reuse for teh rascal user, but no luck.
+I tested for password reuse for the rascal user, but no luck.
 
 I tried brute forcing the user ```fox```'s ssh creds with hydra using the command ```hydra -l fox -P /usr/share/wordlists/rockyou.txt ssh://10.65.183.55 -s 2222 -vvv -t 64``` and I got a password!!
 
@@ -195,6 +197,26 @@ With that going nowhere, I decided to try one of the linpeas privescs I found.
 I tried the sudo exploit, but it required me to use the make command which wasn't on the box nor was gcc and the box didn't have any internet connection.
 
 So that left me with the writable path exploit left to try.
+
+According to the linpeas output, this was the writable path: ```/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin```. This is interesting because this means that ```secure_path```, which makes sure the ```$PATH``` environment variable isnt writbale by any normal user, is set in the sudoers file.
+
+This means that if you have a binary you can run as sudo, and you know what command it relies on, you can write to the ```$PATH``` variable and hijack the binary the system uses for that command.
+
+---
+
+### Priv Esc
+
+If you look back earlier, we see in the ghidra decompilation that that the shutdown binary uses the ```system``` c command to pass the ```poweroff``` command to the shell.
+
+Knowing this, I set the path variable to search the ```/tmp``` directory first by doing the command ```export PATH="/tmp:$PATH"```, then I did the command ```cp /bin/bash /tmp/poweroff``` so that when the system command uses the ```$PATH``` environment variable to search for the poweroff command and find it in ```/tmp/poweroff``` and then execute bash instead of poweroff.
+
+I executed ```sudo /usr/bin/shutdown``` and got a root shell. PWNED! 
+
+<img width="280" height="210" alt="anonymousGIF" src="https://github.com/user-attachments/assets/44591f66-bd5d-4c4f-87a9-101bb323b370" />
+
+
+<img width="429" height="105" alt="image" src="https://github.com/user-attachments/assets/9d687ce8-9480-409c-9fd9-22dcbe6040df" />
+
 
 ---
 
