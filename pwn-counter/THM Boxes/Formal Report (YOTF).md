@@ -79,19 +79,23 @@ In total, four findings were identified and are summarized below.
     <td>7.5</td>
   </tr>
    <tr>
-    <td>2</td>
+    <td>3</td>
     <td>Command Injection via Input Validation Flaw</td>
     <td>🟠 High</td>
     <td>7.6</td>
   </tr>
-  <tr>
-    <td>4</td>
+  <td>4</td>
+    <td>Port forwarding and IP binding of Local Host SSH Service</td>
+    <td>🟢 Low</td>
+    <td>3.3</td>
+  </tr>
+    <td>5</td>
     <td>Lateral Movement to fox user via ssh brute-forcing</td>
-    <td>🟠 High</td>
-    <td>7.6</td>
+    <td>🔴 Critical</td>
+    <td>8.0</td>
   </tr>
   <tr>
-    <td>5</td>
+    <td>6</td>
     <td>Privilege Escalation to root via PATH hijacking</td>
     <td>🔴 Critical</td>
     <td>8.8</td>
@@ -275,7 +279,8 @@ This vulnerability in input validation allowed command injection to take place e
 - Avoid using system commands in web app logic when possible.
 - Implement strict argument parsing when writing logic for a webapp.
 - Implement a Web Application Firewall (WAF) to detect and prevent command injection and other web exploitation techniques.
-- Implement principles of Least Privilege and Assumed Breach when delegating user privileges for web facing user such as ```www-data```.
+- - Configure a host-based firewall to block any unnecessary ingress and egress traffic, including binding to external interfaces.
+- Implement principles of Least Privilege and Assumed Breach when delegating user privileges for web facing users such as ```www-data```.
 
 ---
 
@@ -292,55 +297,138 @@ This vulnerability in input validation allowed command injection to take place e
   </tr>
   <tr>
     <td><strong>Affected Component</strong></td>
-    <td>Local Host SSH Service</td>
+    <td>Local Host SSH Service on port 22</td>
   </tr>
 </table>
 
 **Description**
 
-With local user access, 
+With local user access, a statically compiled ```socat``` binary can be downloaded to the web-facing machine's ```/tmp``` directory and used to bind the local host ssh service to ```0.0.0.0:<PORT>```, which allows the ssh service to be accessible to anyone.
 
 **Proof of Concept**
 
-A public proof-of-concept exploit script for CVE-2021-38647 was transferred to the container and used to validate the vulnerability with a benign command:
+This simple command using the ```socat``` binary allowed the ssh service to be accessed by anyone on port 2222:
 
 ```bash
-python3 omigod_exploit.py -t 172.17.0.1 -p 5986 -c id
+./socat TCP-LISTEN:2222,fork,bind=<IP> TCP:127.0.0.1:22
 ```
 
-The command executed successfully, confirming unauthenticated code execution. The payload was then changed to a reverse shell:
-
-```bash
-python3 omigod_exploit.py -t 172.17.0.1 -p 5986 -c "<reverse_shell_command>"
-```
-
-A callback was received on a local listener as the Docker host machine, confirming full container escape and host compromise.
+Upon execution, the SSH service was able to be queried by an unauthenticated, external user.
 
 **Impact**
 
-This finding results in complete unauthenticated remote code execution on the physical/virtual host underlying the container infrastructure, from a position with no legitimate credentials, fully breaking the isolation boundary the container was expected to provide.
+This finding allows an unauthenticated, external user to query the SSH service meant to be exclusively bound to local host, which allows attackers to perform brute force attacks on the SSH Service (seen in Finding 4.5).
 
 **Remediation**
 
-- Patch OMI to a version that enforces authentication on all management requests, or remove OMI entirely if Azure VM management is not required.
-- Restrict access to OMI's listening ports to trusted management networks only, never to application container networks.
-- As with Finding 4.3's remediation, proper network segmentation would have prevented this service from being reachable in the first place, providing defense-in-depth even if a future OMI-class vulnerability is discovered.
+- Implement the principle of Least Privilege on all web-facing users like ```www-data``` to prevent unneeded command execution and downloads.
+- Force the SSH service to bind itself to local host on port 22 so that it cannot be bound to another IP and port.
+- Implement network segmentation so that even in the case of unbinding from the local host port, an attacker still cannot make the machine callback to their interface.
 
 ---
 
+### 4.5 Lateral Movement to fox user via ssh brute-forcing
+
+<table>
+  <tr>
+    <td><strong>Severity</strong></td>
+    <td>Critical</td>
+  </tr>
+  <tr>
+    <td><strong>CVSS 3.1 Vector</strong></td>
+    <td><code>AV:L/AC:L/PR:N/UI:N/S:U/C:H/I:H/A:L</code> (8.0)</td>
+  </tr>
+  <tr>
+    <td><strong>Affected Component</strong></td>
+    <td><code>SSH password for user fox</code></td>
+  </tr>
+</table>
+
+**Description**
+
+Following the binding of the SSH service to be accessible to anyone via port 2222 (as seen in Finding 4.4), an unauthenticated, external attacker can brute force the SSH password of the ```fox``` user.
+
+**Proof of Concept**
+
+```bash
+hydra -l fox -P /usr/share/wordlists/rockyou.txt ssh://<IP> -vvv -t 30
+```
+
+Execution of this one-line command returned a the password for the ```fox``` user.
+
+**Impact**
+
+An unauthenticated attacker can get a valid SSH password of a valid high privilege local user just the enumerated username ```fox``` and brute forcing via a one line command, which would grant them access to an SSH Session as a high privileged user on the machine, enabling privilege escalation to root (seen in Finding 4.6).
+
+**Remediation**
+
+- Implement a strict password policy to prevent attackers from being able to brute force simple passwords.
+- Implement a form of an IP based ACL to prevent access to the internal SSH Service, even if an attacker manages to rebind the SSH Service and get your password.
+
+---
+
+### 4.6 Privilege Escalation to root via PATH hijacking
+
+<table>
+  <tr>
+    <td><strong>Severity</strong></td>
+    <td>Critical</td>
+  </tr>
+  <tr>
+    <td><strong>CVSS 3.1 Vector</strong></td>
+    <td><code>AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:N/A:N</code> (8.8)</td>
+  </tr>
+  <tr>
+    <td><strong>Affected Component</strong></td>
+    <td><code>secure_path misconfiguration in sudoers file</code></td>
+  </tr>
+</table>
+
+**Description**
+
+Following access to the machine via an SSH Session as the user ```fox```, local enumeration returned that there was a program able to be run with root permission, which when decompiled, showed a call to the ```poweroff``` binary. Further local enumeration using the privilege escalation script ```LinPEAS``` returned a vulnerability in the sudoers file which allowed any user to write to the ```$PATH``` environment variable. Combining these two finds, a path hijack is able to be performed in where a malicious binary renamed to the ```poweroff``` binary is used instead of the real ```poweroff``` binary by putting the malicious version in the ```/tmp``` directory, and then exporting ```/tmp``` as the first path to be searched in the ```$PATH``` environment variable.
+
+**Proof of Concept**
+
+```bash
+export PATH="/tmp:$PATH"
+```
+
+Execution of this one-line command makes the ```/tmp``` directory the first path used to search for binaries called by binaries and the system.
+
+```bash
+cp /bin/bash /tmp/poweroff
+```
+
+Execution of this command copies the bash program to the ```/tmp``` directory to be executed when it is searched for when an application calls it.
+
+```bash
+sudo /usr/sbin/shutdown
+```
+
+Execution of this command allows the ```fox``` user to run the binary as root as specified in the sudoers file, but becuase of the absence of the ```secure_path``` configuration in the sudoers file, the call to the ```poweroff``` command made by the ```shutdown``` binary is able to be hijacked via bash named ```/tmp/poweroff``` resulting in a root privileged shell.
+
+**Impact**
+
+This finding allows a remote attacker to have full access and control of the machine, fully compromising the Confidentiality, Integrity, and Availability of the machine.
+
+**Remediation**
+
+- Implement the ```secure_path``` configuration in the sudoers file.
+- Implement principle of Least Privilege on all user accounts. (i.e. Only allow root privileges when absolutely needed)
+- 
 ## 5. Attack Narrative / Kill Chain
 
-1. Enumerated open ports via Nmap: 22 (SSH) and 80 (HTTP).
-2. Performed content discovery with Gobuster and virtual host enumeration; found only a static landing page and an exposed `/assets` directory listing.
-3. Ran Nuclei against the web server and identified a known Apache HTTP Server vulnerability (CVE-2021-41773 / CVE-2021-42013).
-4. Exploited the vulnerability using a public proof-of-concept script to obtain an initial interactive shell (Finding 4.1).
-5. Upgraded the shell to a stable Python-based reverse shell.
-6. Identified a root-owned `.dockerenv` file, confirming a containerized foothold.
-7. Ran LinPEAS and discovered the `python3` binary held the `cap_setuid` Linux capability.
-8. Escalated to root within the container using a one-line Python `os.setuid(0)` command (Finding 4.2).
-9. Confirmed the container resided on a Docker bridge network with the host reachable as a network peer at `172.17.0.1` (Finding 4.3).
-10. Transferred a static Nmap binary into the container and scanned the Docker host, identifying an exposed OMI service on port 5986.
-11. Exploited CVE-2021-38647 ("OMIGOD") against the Docker host and obtained a reverse shell as the host machine (Finding 4.4).
+1. Enumerated open ports via Nmap: 80 (HTTP) and Samba (445).
+2. Performed enumeration on the Samba share via ```enum4linux``` and ```smbmap```, which enumerated all local users and shares.
+3. Ran hydra against the Basic HTTP Authentication of the web-server hosting the internal webapp, successfully returning the password of the ```rascal``` user.
+4. Captured a request to the webapp via burp-suite, allowing for command injection via the JSON parameter due to a flaw in the logic behind the input validation of the webapp, allowing for a reverse shell as user ```www-data```.
+5. Used ```socat``` to bind the SSH Service to be accessible to anyone via port 2222.
+6. Ran hydra against the SSH service which returned the password of the ```fox``` user, granting an SSH Session as a high privileged user.
+7. Discovered that the ```fox``` user was able to run a binary called ```shutdown``` as root, which upon decompilation in Ghidra showed it just made a call to the ```poweroff``` binary.
+8. Ran LinPEAS and discovered that the ```$PATH``` variable was writable by users.
+9. Hijacked the ```$PATH``` directory to search the ```/tmp``` directory first which hosted bash renamed as ```/tmp/poweroff```, the binary that the ```shutdown``` binary called.
+10. ran ```sudo /usr/bin/shutdown``` and was granted a root privileged bash shell.
 
 ---
 
@@ -348,25 +436,25 @@ This finding results in complete unauthenticated remote code execution on the ph
 
 The following remediation actions, in priority order, would have prevented or substantially disrupted this attack chain:
 
-- **Patch Apache HTTP Server** to a version unaffected by CVE-2021-41773 / CVE-2021-42013, eliminating the initial foothold.
-- **Remove unnecessary Linux capabilities** from interpreters and general-purpose binaries such as `python3`, eliminating the trivial root escalation path inside the container.
-- **Enforce network segmentation** between application containers and the Docker host, ensuring host-level management services are never reachable from container networks.
-- **Patch or remove the OMI service** on the Docker host, or at minimum restrict it to trusted management-only network segments.
-- **Regularly audit container images and host configurations** for excessive capabilities, unnecessary exposed services, and default bridge network trust assumptions.
+- **Enforce network segmentation**: This could have prevented even reaching the webapp.
+- **Configure the ```secure_path``` configuration in the sudoers file**: This would have prevented the privilege escalation to root.
+- **Disabling Null Session on Samba Shares**: This would have prevented enumeration of local users.
+- **Enforce Strict Password Policies**: This would have prevented unauthorized access to the internal webapp and to the SSH service.
+- **Proper Input Validation**: This would have prevented the foothold on the machine.
 
 ---
 
 ## 7. Conclusion
 
-The Oh My WebServer host chain was fully compromised from an unauthenticated, external starting position through to root-level code execution on the underlying Docker host. The root cause was a combination of an unpatched, publicly known web server vulnerability, an unnecessary and dangerous Linux capability assignment, and a container network configuration that failed to isolate the host from a compromised application container. Addressing any single one of these issues would have independently broken this attack chain before it reached the underlying host.
+The Year of the Fox host chain was fully compromised from an unauthenticated, external starting position through to root-level code execution on the web-facing machine. The root cause was a combination of weak passwords, improper input validation in the webapp, improper ```$PATH``` environment variable security configurations, an unnecessary null session on the samba share, and improper network segmentation. Addressing any single one of these issues could have independently broken this attack chain before it reached the underlying host.
 
 ---
 
 ## 8. Appendix: Tools Used
 
 - **Nmap** — service and port enumeration (both external and internal/container-scoped)
-- **Gobuster** — web content and directory discovery
-- **Nuclei** — automated vulnerability scanning
+- **Hydra** — password brute forcing
+- **smbmap and enum4linux** — Samba Share and local user enumeration
 - **LinPEAS** — local privilege escalation enumeration
-- **Netcat** — reverse shell listener
-- **Public CVE proof-of-concept scripts** — CVE-2021-41773/CVE-2021-42013 and CVE-2021-38647 exploitation
+- **netcat** — reverse shell listener
+- **socat** — reverse shell listener and binary used for SSH rebinding
