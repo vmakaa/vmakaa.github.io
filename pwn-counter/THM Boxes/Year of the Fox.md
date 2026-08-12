@@ -217,24 +217,22 @@ I executed ```sudo /usr/bin/shutdown``` and got a root shell. PWNED!
 
 <img width="429" height="105" alt="image" src="https://github.com/user-attachments/assets/9d687ce8-9480-409c-9fd9-22dcbe6040df" />
 
-
----
-
-To be cont
-
 ---
 
 ## Solution Steps
 
-1. Use nuceli to find the rce vulnerability on the web server
-2. get a shell and escalate to root uid using python set uid capabilities
-3. break out the docker container using OMI on port 5986 exploit to get reverse shell as machine host
+1. Use hydra to get the password for the user ```rascal``` to the http authentication on the webserver
+2. Use command injection to get a reverse shell
+3. Pull ```socat``` on the box and bind ssh to the ipv4 address
+4. use hydra to brute force the ssh password for the fox user
+5. reverse engineer the shutdown binary to figure out what command it uses
+6. hijack the path of that command with your own bash binary in tmp by writing ```/tmp``` as the path that gets searched when searching for binary paths.
 
 ---
 
 ## Thoughts
 
-This was a really fun box. Even though the initial priv esc was really easy, I found breaking out the docker container to be a niche and cool path to learn about and add to my toolbelt. Definitely Recommend. 
+This was a really neat box and I felt like I was able to sharpen my skills by doing it. I enjoyed the foothold and privesc technique, they felt very oscp practice like. 10/10.
 
 ---
 
