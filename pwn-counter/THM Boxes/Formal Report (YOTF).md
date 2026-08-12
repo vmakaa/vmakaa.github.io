@@ -80,13 +80,14 @@ In total, four findings were identified and are summarized below.
     <td>🟠 High</td>
     <td>7.5</td>
   </tr>
-   <tr>
+  <tr>
     <td>3</td>
     <td>Command Injection via Input Validation Flaw</td>
     <td>🟠 High</td>
     <td>7.6</td>
   </tr>
-  <td>4</td>
+  <tr>
+    <td>4</td>
     <td>Port forwarding and IP binding of Local Host SSH Service</td>
     <td>🟢 Low</td>
     <td>3.3</td>
