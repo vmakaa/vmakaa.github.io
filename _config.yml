@@ -30,7 +30,7 @@ aux_links_new_tab: true
 back_to_top: true
 back_to_top_text: "Back to top"
 
-footer_content: "Copyright &copy; 2026. CTF writeups for educational purposes."
+footer_content: "[I see you, there are universes beyond my own](https://www.youtube.com/watch?v=DwMYUZBV2Ak)"
 
 # Color customization (optional, just-the-docs defaults are fine)
 nav_sort: case_insensitive
