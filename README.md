@@ -1,3 +1,3 @@
 # Cyber Stuff
 
-https://vmakaa.github.io/pwn-counter/
+https://vmakaa.github.io/
